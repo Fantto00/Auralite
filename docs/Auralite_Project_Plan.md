@@ -177,7 +177,7 @@ app/
 │   │           ├── SynthesizeSpeechUseCase.kt
 │   │           └── PlayAudioUseCase.kt
 │   │
-│   ├── presentation/                  # 表现层
+│   ├── ui/                  # 表现层
 │   │   ├── navigation/               # 导航
 │   │   │   ├── NavGraph.kt
 │   │   │   └── Screen.kt
@@ -633,7 +633,7 @@ app/
 - [ ] 音色选择器
 - [ ] 语言选择器
 
-#### 6.3 对话历史
+#### 6.3 历史界面
 - [ ] ConversationListScreen
 - [ ] ConversationDetailScreen
 
