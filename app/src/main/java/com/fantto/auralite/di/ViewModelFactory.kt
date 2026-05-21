@@ -11,14 +11,14 @@ class ViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when (modelClass) {
             // ChatViewModel
-//            com.fantto.auralite.presentation.screen.chat.ChatViewModel::class.java -> {
+//            com.fantto.auralite.ui.screen.chat.ChatViewModel::class.java -> {
 //                com.fantto.auralite.presentation.screen.chat.ChatViewModel(
 //                    chatRepository = appModule.chatRepository,
 //                    audioRepository = appModule.audioRepository
 //                ) as T
 //            }
             // SettingsViewModel
-//            com.fantto.auralite.presentation.screen.settings.SettingsViewModel::class.java -> {
+//            com.fantto.auralite.ui.screen.settings.SettingsViewModel::class.java -> {
 //                com.fantto.auralite.presentation.screen.settings.SettingsViewModel(
 //                    settingsRepository = appModule.settingsRepository
 //                ) as T

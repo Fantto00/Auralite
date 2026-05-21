@@ -14,6 +14,7 @@ class App : Application() {
         appModule = AppModule(applicationContext)
     }
 
+    // 提供全局 app 单例
     companion object {
         lateinit var instance: App
             private set
