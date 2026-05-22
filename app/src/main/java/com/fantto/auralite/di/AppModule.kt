@@ -1,6 +1,19 @@
 package com.fantto.auralite.di
 
 import android.content.Context
+import androidx.room.Room
+import com.fantto.auralite.data.local.dao.ConversationDao
+import com.fantto.auralite.data.local.database.AppDatabase
+import com.fantto.auralite.data.local.datastore.SettingsDataStore
+import com.fantto.auralite.data.remote.api.LlmApiService
+import com.fantto.auralite.data.remote.api.TtsApiService
+import com.fantto.auralite.data.remote.interceptor.AuthInterceptor
+import com.fantto.auralite.data.repository.AudioRepositoryImpl
+import com.fantto.auralite.data.repository.ChatRepositoryImpl
+import com.fantto.auralite.data.repository.SettingsRepositoryImpl
+import com.fantto.auralite.domain.repository.AudioRepository
+import com.fantto.auralite.domain.repository.ChatRepository
+import com.fantto.auralite.domain.repository.SettingsRepository
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -8,21 +21,72 @@ import java.util.concurrent.TimeUnit
 
 class AppModule(private val context: Context) {
 
-    private val okHttpClient : OkHttpClient by lazy {
+    //本地api配置存储类的实例
+    val settingsDataStore: SettingsDataStore by lazy {
+        SettingsDataStore(context)
+    }
+
+    // Room 数据库
+    private val appDatabase: AppDatabase by lazy {
+        Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            "auralite_database"
+        ).build()
+    }
+
+    val conversationDao: ConversationDao by lazy {
+        appDatabase.conversationDao()
+    }
+
+    // OkHttp 客户端
+    private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            //.addInterceptor(自定义拦截器)
-            .connectTimeout(30 , TimeUnit.SECONDS)
-            .readTimeout(60 , TimeUnit.SECONDS)
-            .writeTimeout(60 , TimeUnit.SECONDS)
+            .addInterceptor(AuthInterceptor(settingsDataStore))
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build()
     }
 
-    private val retrofit : Retrofit by lazy {
+    // LLM Retrofit 实例
+    private val llmRetrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl("https://api.example.com/") // 替换为实际的 API 基础 URL
+            .baseUrl("https://api.openai.com/")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
+
+    // TTS Retrofit 实例
+    private val ttsRetrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://api.openai.com/")
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // API Service 实例
+    val llmApiService: LlmApiService by lazy {
+        llmRetrofit.create(LlmApiService::class.java)
+    }
+
+    val ttsApiService: TtsApiService by lazy {
+        ttsRetrofit.create(TtsApiService::class.java)
+    }
+
+    // Repository 实例
+    val chatRepository: ChatRepository by lazy {
+        ChatRepositoryImpl(llmApiService, conversationDao)
+    }
+
+    val settingsRepository: SettingsRepository by lazy {
+        SettingsRepositoryImpl(settingsDataStore)
+    }
+
+    val audioRepository: AudioRepository by lazy {
+        AudioRepositoryImpl(context, ttsApiService)
     }
 
 }
