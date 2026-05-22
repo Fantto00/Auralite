@@ -7,7 +7,7 @@
 
 从 [官方模型仓库](https://alphacephei.com/vosk/models) 下载：
 
-我下载了vosk-model-small-cn-0.22，并直接把zip压缩包复制到了assets目录下 名为vosk-model-small-cn.zip。后面自己写解压逻辑复制到本地文件夹。而不是像下面代码那样直接复制。
+我下载了vosk-model-small-cn-0.22，并直接把zip压缩包复制到了assets目录下 名为vosk-model-small-cn.zip。注意：后面自己写解压逻辑复制到本地文件夹。而不是像下面代码那样直接复制。
 
 ## 二、核心代码实现
 
@@ -102,7 +102,7 @@ Vosk 提供两种结果获取方式：
 
 - **降低功耗**：在后台服务中运行识别，使用 `WakeLock` 防止休眠
 - **内存管理**：及时释放不再使用的 `Recognizer` 和 `Model` 对象
-- **线程分离**：使用线程分离录音与识别逻辑，避免阻塞 UI
+- **线程分离**：使用协程分离录音与识别逻辑，避免阻塞 UI
 - **缓冲区调整**：动态调整缓冲区大小（如 512 字节）以降低延迟
 
 
@@ -118,7 +118,7 @@ Vosk 提供两种结果获取方式：
 
 ### 4.2 性能优化清单
 
-- [ ] 使用后台线程处理识别任务
+- [ ] 使用后台服务处理识别任务
 - [ ] 合理设置缓冲区大小（512-4096 字节）
 - [ ] 及时释放不用的 Recognizer 对象
 - [ ] 避免频繁创建/销毁 Model 实例
@@ -128,6 +128,3 @@ Vosk 提供两种结果获取方式：
 
 - Vosk 官方模型下载：https://alphacephei.com/vosk/models
 - Vosk Android SDK：https://github.com/alphacep/vosk-android
-
----
-*本文根据百度云开发者文章整理生成*

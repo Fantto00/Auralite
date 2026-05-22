@@ -2,6 +2,7 @@ package com.fantto.auralite.di
 
 import android.content.Context
 import androidx.room.Room
+import com.fantto.auralite.data.engine.stt.VoskEngine
 import com.fantto.auralite.data.local.dao.ConversationDao
 import com.fantto.auralite.data.local.database.AppDatabase
 import com.fantto.auralite.data.local.datastore.SettingsDataStore
@@ -11,6 +12,7 @@ import com.fantto.auralite.data.remote.interceptor.AuthInterceptor
 import com.fantto.auralite.data.repository.AudioRepositoryImpl
 import com.fantto.auralite.data.repository.ChatRepositoryImpl
 import com.fantto.auralite.data.repository.SettingsRepositoryImpl
+import com.fantto.auralite.domain.engine.SttEngine
 import com.fantto.auralite.domain.repository.AudioRepository
 import com.fantto.auralite.domain.repository.ChatRepository
 import com.fantto.auralite.domain.repository.SettingsRepository
@@ -87,6 +89,11 @@ class AppModule(private val context: Context) {
 
     val audioRepository: AudioRepository by lazy {
         AudioRepositoryImpl(context, ttsApiService)
+    }
+
+    // STT Engine 实例
+    val sttEngine: SttEngine by lazy {
+        VoskEngine(context)
     }
 
 }
