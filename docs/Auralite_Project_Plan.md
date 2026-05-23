@@ -355,7 +355,7 @@ app/
   )
   ```
 
-- [ ] 创建 MiMo TTS API Service
+- [ ] 创建 TTS API Service
   ```kotlin
   interface TtsApiService {
       @POST("v1/audio/speech")
@@ -501,7 +501,7 @@ app/
 
 ### Phase 5: 在线 TTS 集成（2-3 天）
 
-#### 5.1 MiMo TTS 引擎
+#### 5.1 TTS 引擎（可配置）
 - [ ] 创建 TtsEngine 接口
   ```kotlin
   interface TtsEngine {
@@ -512,9 +512,9 @@ app/
   }
   ```
 
-- [ ] 实现 MiMoEngine
+- [ ] 实现通用 TtsEngine（支持多厂商配置）
   ```kotlin
-  class MiMoEngine(
+  class TtsEngineImpl(
       private val ttsApiService: TtsApiService,
       private val settingsRepository: SettingsRepository
   ) : TtsEngine {
@@ -522,6 +522,7 @@ app/
       override suspend fun synthesize(text: String): Flow<ByteArray> = flow {
           val config = settingsRepository.getTtsConfig()
           val request = TtsRequest(
+              model = config.model,  // 从配置读取，支持不同厂商模型
               input = text,
               voice = config.voice,
               speed = config.speed
@@ -541,6 +542,15 @@ app/
           }
       }.flowOn(Dispatchers.IO)
   }
+  ```
+
+- [ ] TTS 配置模型示例
+  ```kotlin
+  data class TtsConfig(
+      val model: String,    // 如 "xiaomi-mimo-tts"、"qwen-tts" 等
+      val voice: String,    // 音色
+      val speed: Float      // 语速
+  )
   ```
 
 #### 5.2 音频播放器
