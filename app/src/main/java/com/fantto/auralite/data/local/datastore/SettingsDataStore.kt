@@ -20,6 +20,7 @@ class SettingsDataStore(private val context: Context) {
         private val LLM_MODEL = stringPreferencesKey("llm_model")
 
         private val TTS_API_KEY = stringPreferencesKey("tts_api_key")
+        private val TTS_MODEL = stringPreferencesKey("tts_model")
         private val TTS_VOICE = stringPreferencesKey("tts_voice")
         private val TTS_SPEED = floatPreferencesKey("tts_speed")
 
@@ -41,6 +42,10 @@ class SettingsDataStore(private val context: Context) {
 
     val ttsApiKey: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[TTS_API_KEY] ?: ""
+    }
+
+    val ttsModel: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[TTS_MODEL] ?: ""
     }
 
     val ttsVoice: Flow<String> = context.dataStore.data.map { preferences ->
@@ -65,9 +70,10 @@ class SettingsDataStore(private val context: Context) {
         }
     }
 
-    suspend fun saveTtsConfig(apiKey: String, voice: String, speed: Float) {
+    suspend fun saveTtsConfig(apiKey: String, model: String, voice: String, speed: Float) {
         context.dataStore.edit { preferences ->
             preferences[TTS_API_KEY] = apiKey
+            preferences[TTS_MODEL] = model
             preferences[TTS_VOICE] = voice
             preferences[TTS_SPEED] = speed
         }

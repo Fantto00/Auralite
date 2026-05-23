@@ -17,11 +17,14 @@ import com.fantto.auralite.domain.repository.AudioRepository
 import com.fantto.auralite.domain.repository.ChatRepository
 import com.fantto.auralite.domain.repository.SettingsRepository
 import com.fantto.auralite.domain.usecase.llm.SendMessageUseCase
+import com.fantto.auralite.domain.usecase.tts.PlayAudioUseCase
+import com.fantto.auralite.domain.usecase.tts.SynthesizeSpeechUseCase
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
+/** 应用程序的依赖注入模块，负责创建和提供应用所需的各种组件实例 **/
 class AppModule(private val context: Context) {
 
     //本地api配置存储类的实例
@@ -92,7 +95,7 @@ class AppModule(private val context: Context) {
         AudioRepositoryImpl(context, ttsApiService)
     }
 
-    // STT Engine 实例
+    // STT语音识别 Engine 实例
     val sttEngine: SttEngine by lazy {
         VoskEngine(context)
     }
@@ -100,6 +103,14 @@ class AppModule(private val context: Context) {
     // UseCase 实例
     val sendMessageUseCase: SendMessageUseCase by lazy {
         SendMessageUseCase(chatRepository, settingsRepository)
+    }
+
+    val synthesizeSpeechUseCase: SynthesizeSpeechUseCase by lazy {
+        SynthesizeSpeechUseCase(audioRepository, settingsRepository)
+    }
+
+    val playAudioUseCase: PlayAudioUseCase by lazy {
+        PlayAudioUseCase(audioRepository)
     }
 
 }

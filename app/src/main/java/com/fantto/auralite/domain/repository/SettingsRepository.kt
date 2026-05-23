@@ -10,12 +10,13 @@ interface SettingsRepository {
     val llmModel: Flow<String>
 
     val ttsApiKey: Flow<String>
+    val ttsModel: Flow<String>
     val ttsVoice: Flow<String>
     val ttsSpeed: Flow<Float>
 
     val sttLanguage: Flow<String>
 
     suspend fun saveLlmConfig(baseUrl: String, apiKey: String, model: String)
-    suspend fun saveTtsConfig(apiKey: String, voice: String, speed: Float)
+    suspend fun saveTtsConfig(apiKey: String, model: String, voice: String, speed: Float)
     suspend fun saveSttLanguage(language: String)
 }

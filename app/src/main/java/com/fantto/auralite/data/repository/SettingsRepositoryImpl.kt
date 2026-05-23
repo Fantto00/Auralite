@@ -14,6 +14,7 @@ class SettingsRepositoryImpl(
     override val llmModel: Flow<String> = settingsDataStore.llmModel
 
     override val ttsApiKey: Flow<String> = settingsDataStore.ttsApiKey
+    override val ttsModel: Flow<String> = settingsDataStore.ttsModel
     override val ttsVoice: Flow<String> = settingsDataStore.ttsVoice
     override val ttsSpeed: Flow<Float> = settingsDataStore.ttsSpeed
 
@@ -23,8 +24,8 @@ class SettingsRepositoryImpl(
         settingsDataStore.saveLlmConfig(baseUrl, apiKey, model)
     }
 
-    override suspend fun saveTtsConfig(apiKey: String, voice: String, speed: Float) {
-        settingsDataStore.saveTtsConfig(apiKey, voice, speed)
+    override suspend fun saveTtsConfig(apiKey: String, model: String, voice: String, speed: Float) {
+        settingsDataStore.saveTtsConfig(apiKey, model, voice, speed)
     }
 
     override suspend fun saveSttLanguage(language: String) {
