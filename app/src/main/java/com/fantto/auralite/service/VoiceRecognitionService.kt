@@ -12,6 +12,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.elvishew.xlog.XLog
 import com.fantto.auralite.App
 import com.fantto.auralite.MainActivity
 import com.fantto.auralite.R
@@ -25,10 +26,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/** 前台服务，负责持续运行语音识别引擎并提供结果的实时更新 **/
 class VoiceRecognitionService : Service() {
 
     companion object {
-        private const val TAG = "VoiceRecService"
         private const val CHANNEL_ID = "voice_recognition_channel"
         private const val NOTIFICATION_ID = 1
 
@@ -57,7 +58,9 @@ class VoiceRecognitionService : Service() {
     }
 
     private var voskEngine: VoskEngine? = null
-    private var wakeLock: PowerManager.WakeLock? = null
+    private var wakeLock: PowerManager.WakeLock? = null  //唤醒锁，防止设备休眠导致识别中断
+
+    //自定义协程作用域
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onCreate() {
@@ -83,9 +86,10 @@ class VoiceRecognitionService : Service() {
         releaseWakeLock()
         serviceScope.cancel()
         _isRunning.value = false
-        Log.d(TAG, "Service destroyed")
+        XLog.d("VoiceRecognitionService : Service 结束")
     }
 
+    // 启动语音识别引擎，并监听结果更新
     private fun startRecognition() {
         serviceScope.launch {
             try {
@@ -108,9 +112,9 @@ class VoiceRecognitionService : Service() {
                     }
                 }
 
-                Log.d(TAG, "Recognition started")
+                XLog.d("VoiceRecognitionService : 开始识别")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to start recognition", e)
+                XLog.e("VoiceRecognitionService ：开启识别失败 ，异常：$e")
                 stopSelf()
             }
         }
@@ -120,7 +124,7 @@ class VoiceRecognitionService : Service() {
         voskEngine?.release()
         voskEngine = null
         _isRunning.value = false
-        Log.d(TAG, "Recognition stopped")
+        XLog.d("VoiceRecognitionService : 停止识别")
     }
 
     private fun createNotificationChannel() {

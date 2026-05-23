@@ -6,8 +6,8 @@ import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
-import android.util.Log
 import androidx.core.content.ContextCompat
+import com.elvishew.xlog.XLog
 import com.fantto.auralite.domain.engine.SttEngine
 import com.fantto.auralite.util.VoskModelManager
 import kotlinx.coroutines.CoroutineScope
@@ -29,7 +29,6 @@ class VoskEngine(
 ) : SttEngine {
 
     companion object {
-        private const val TAG = "VoskEngine"
         // Vosk模型要求的采样率为16000Hz，但是参数要求为float类型，
         // 但是AudioRecord音频处理类要求采样率为整数类型，所以定义两个常量分别满足两者的要求
         private const val SAMPLE_RATE_INT = 16000
@@ -53,7 +52,7 @@ class VoskEngine(
         val modelPath = VoskModelManager.getModelPath(context)
         model = Model(modelPath)
         recognizer = Recognizer(model, SAMPLE_RATE_FLOAT)
-        Log.d(TAG, "Vosk model initialized at: $modelPath")
+        XLog.d("VoskEngine：初始化路径 $modelPath")
     }
 
     override fun startListening() {
@@ -62,7 +61,7 @@ class VoskEngine(
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e(TAG, "RECORD_AUDIO permission not granted")
+            XLog.e("VoskEngine：未授予RECORD_AUDIO权限")
             return
         }
 
@@ -94,12 +93,14 @@ class VoskEngine(
                         val result = rec.result
                         val text = parseResultText(result)
                         if (text.isNotEmpty()) {
+                            XLog.d("VoskEngine：识别结果 $text")
                             _transcription.emit(text)
                         }
                     } else {
                         val partial = rec.partialResult
                         val text = parsePartialText(partial)
                         if (text.isNotEmpty()) {
+                            XLog.d("VoskEngine：实时识别 $text")
                             _partialResult.emit(text)
                         }
                     }
@@ -109,11 +110,12 @@ class VoskEngine(
             val finalResult = rec.finalResult
             val text = parseResultText(finalResult)
             if (text.isNotEmpty()) {
+                XLog.d("VoskEngine：最终结果 $text")
                 _transcription.emit(text)
             }
         }
 
-        Log.d(TAG, "Started listening")
+        XLog.d("VoskEngine：开始监听")
     }
 
     override fun stopListening() {
@@ -127,7 +129,7 @@ class VoskEngine(
         audioRecord?.release()
         audioRecord = null
 
-        Log.d(TAG, "Stopped listening")
+        XLog.d("VoskEngine：停止监听")
     }
 
     override fun observeTranscription(): Flow<String> = _transcription
@@ -142,7 +144,7 @@ class VoskEngine(
         recognizer = null
         model?.close()
         model = null
-        Log.d(TAG, "Released resources")
+        XLog.d("VoskEngine：释放资源")
     }
 
     private fun parseResultText(json: String): String {

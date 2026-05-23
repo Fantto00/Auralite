@@ -7,7 +7,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.zip.ZipInputStream
 
-/** Vosk模型管理器，负责解压模型文件以及提供模型路径，防止重复解压 **/
+/** Vosk模型管理器，或者说是解压器，负责解压模型文件以及提供模型路径，防止重复解压 **/
 object VoskModelManager {
 
     private const val MODEL_DIR_NAME = "vosk-model"
