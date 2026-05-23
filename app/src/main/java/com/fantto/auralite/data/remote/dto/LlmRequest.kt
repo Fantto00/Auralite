@@ -6,6 +6,7 @@ data class LlmRequest(
     val messages: List<ChatMessage>,
     val stream: Boolean = true,
     val temperature: Float = 0.7f
+    //温度参数：控制 LLM 输出随机性的参数      0.0 -> 1.0+，值越高输出越随机，值越低输出越确定
 )
 
 data class ChatMessage(

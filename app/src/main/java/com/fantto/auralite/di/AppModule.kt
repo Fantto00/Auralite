@@ -16,6 +16,7 @@ import com.fantto.auralite.domain.engine.SttEngine
 import com.fantto.auralite.domain.repository.AudioRepository
 import com.fantto.auralite.domain.repository.ChatRepository
 import com.fantto.auralite.domain.repository.SettingsRepository
+import com.fantto.auralite.domain.usecase.llm.SendMessageUseCase
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -94,6 +95,11 @@ class AppModule(private val context: Context) {
     // STT Engine 实例
     val sttEngine: SttEngine by lazy {
         VoskEngine(context)
+    }
+
+    // UseCase 实例
+    val sendMessageUseCase: SendMessageUseCase by lazy {
+        SendMessageUseCase(chatRepository, settingsRepository)
     }
 
 }
