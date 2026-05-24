@@ -23,6 +23,7 @@ import com.fantto.auralite.ui.screen.chat.ChatScreen
 import com.fantto.auralite.ui.screen.chat.ChatViewModel
 import com.fantto.auralite.ui.screen.history.HistoryScreen
 import com.fantto.auralite.ui.screen.settings.SettingsScreen
+import com.fantto.auralite.ui.screen.settings.SettingsViewModel
 // 导航图，定义了应用的导航结构
 @Composable
 fun AuraliteNavGraph() {
@@ -74,7 +75,8 @@ fun AuraliteNavGraph() {
                 HistoryScreen()
             }
             composable(Screen.Settings.route) {
-                SettingsScreen()
+                val settingsViewModel: SettingsViewModel = viewModel(factory = viewModelFactory)
+                SettingsScreen(viewModel = settingsViewModel)
             }
         }
     }
