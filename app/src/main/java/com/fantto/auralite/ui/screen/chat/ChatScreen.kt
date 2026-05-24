@@ -27,7 +27,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.fantto.auralite.domain.model.ChatState
 import com.fantto.auralite.service.VoiceRecognitionService
 import com.fantto.auralite.ui.screen.chat.components.ChatInputBar
