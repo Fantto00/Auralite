@@ -22,6 +22,7 @@ import com.fantto.auralite.di.ViewModelFactory
 import com.fantto.auralite.ui.screen.chat.ChatScreen
 import com.fantto.auralite.ui.screen.chat.ChatViewModel
 import com.fantto.auralite.ui.screen.history.HistoryScreen
+import com.fantto.auralite.ui.screen.history.HistoryViewModel
 import com.fantto.auralite.ui.screen.settings.SettingsScreen
 import com.fantto.auralite.ui.screen.settings.SettingsViewModel
 // 导航图，定义了应用的导航结构
@@ -72,7 +73,8 @@ fun AuraliteNavGraph() {
                 ChatScreen(viewModel = chatViewModel)
             }
             composable(Screen.History.route) {
-                HistoryScreen()
+                val historyViewModel: HistoryViewModel = viewModel(factory = viewModelFactory)
+                HistoryScreen(viewModel = historyViewModel)
             }
             composable(Screen.Settings.route) {
                 val settingsViewModel: SettingsViewModel = viewModel(factory = viewModelFactory)
