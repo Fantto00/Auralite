@@ -9,21 +9,26 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.fantto.auralite.App
+import com.fantto.auralite.di.ViewModelFactory
 import com.fantto.auralite.ui.screen.chat.ChatScreen
+import com.fantto.auralite.ui.screen.chat.ChatViewModel
 import com.fantto.auralite.ui.screen.history.HistoryScreen
 import com.fantto.auralite.ui.screen.settings.SettingsScreen
-
+// 导航图，定义了应用的导航结构
 @Composable
-@Preview
 fun AuraliteNavGraph() {
     val navController = rememberNavController()
+    val app = LocalContext.current.applicationContext as App
+    val viewModelFactory = ViewModelFactory(app.appModule)
 
     val screens = listOf(
         Screen.Chat,
@@ -62,7 +67,8 @@ fun AuraliteNavGraph() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Chat.route) {
-                ChatScreen()
+                val chatViewModel: ChatViewModel = viewModel(factory = viewModelFactory)
+                ChatScreen(viewModel = chatViewModel)
             }
             composable(Screen.History.route) {
                 HistoryScreen()
