@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -28,6 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
+import com.fantto.auralite.ui.icons.start_recording
+import com.fantto.auralite.ui.icons.stop_circle
+
 
 @Composable
 fun VoiceInputButton(
@@ -87,7 +86,7 @@ fun VoiceInputButton(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Done,
+                        imageVector = stop_circle,
                         contentDescription = "停止录音",
                         modifier = Modifier.size(28.dp),
                         tint = MaterialTheme.colorScheme.onError
@@ -103,7 +102,7 @@ fun VoiceInputButton(
                 )
             ) {
                 Icon(
-                    imageVector = Icons.Default.PlayArrow,
+                    imageVector = start_recording,
                     contentDescription = "开始录音",
                     modifier = Modifier.size(28.dp),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer

@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -26,6 +23,8 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
+import com.fantto.auralite.ui.icons.pause_circle
+import com.fantto.auralite.ui.icons.play_circle
 
 @Composable
 fun PlaybackIndicator(
@@ -45,7 +44,7 @@ fun PlaybackIndicator(
             )
         ) {
             Icon(
-                imageVector = if (isPlaying) Icons.Default.Close else Icons.Default.PlayArrow,
+                imageVector = if (isPlaying) pause_circle else play_circle,
                 contentDescription = if (isPlaying) "暂停" else "播放",
                 modifier = Modifier.height(18.dp).width(18.dp),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer

@@ -3,9 +3,6 @@ package com.fantto.auralite.ui.screen.settings.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.fantto.auralite.ui.icons.visibility
+import com.fantto.auralite.ui.icons.visibility_off
+
 
 @Composable
 fun ApiConfigItem(
@@ -70,8 +70,8 @@ fun ApiConfigItem(
                 {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            imageVector = if (passwordVisible) Icons.Default.Done
-                            else Icons.Default.Warning,
+                            imageVector = if (passwordVisible) visibility
+                            else visibility_off,
                             contentDescription = if (passwordVisible) "隐藏" else "显示"
                         )
                     }

@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -19,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.fantto.auralite.ui.icons.send
+import com.fantto.auralite.ui.icons.voice_info
 
 @Composable
 fun ChatInputBar(
@@ -58,7 +57,7 @@ fun ChatInputBar(
                 )
             ) {
                 Icon(
-                    imageVector = Icons.Default.Info,
+                    imageVector = voice_info,
                     contentDescription = "语音输入",
                     tint = if (isListening) MaterialTheme.colorScheme.onError
                     else MaterialTheme.colorScheme.onPrimaryContainer
@@ -73,7 +72,7 @@ fun ChatInputBar(
                 )
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    imageVector = send,
                     contentDescription = "发送",
                     tint = MaterialTheme.colorScheme.onPrimary
                 )

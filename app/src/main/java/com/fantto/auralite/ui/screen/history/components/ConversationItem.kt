@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.fantto.auralite.ui.icons.mail
+import com.fantto.auralite.ui.icons.delete
 import com.fantto.auralite.ui.screen.history.ConversationUiModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -49,7 +48,7 @@ fun ConversationItem(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.MailOutline,
+                imageVector = mail,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -77,7 +76,7 @@ fun ConversationItem(
 
         IconButton(onClick = onDelete) {
             Icon(
-                imageVector = Icons.Default.Delete,
+                imageVector = delete,
                 contentDescription = "删除",
                 tint = MaterialTheme.colorScheme.error
             )

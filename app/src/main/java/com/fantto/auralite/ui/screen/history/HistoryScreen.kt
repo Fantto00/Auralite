@@ -1,14 +1,10 @@
 package com.fantto.auralite.ui.screen.history
 
-import android.R.attr.contentDescription
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,6 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.fantto.auralite.ui.icons.delete
 import com.fantto.auralite.ui.screen.history.components.ConversationItem
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,7 +40,7 @@ fun HistoryScreen(
                             conversations.forEach { viewModel.deleteConversation(it.id) }
                         }) {
                             Icon(
-                                imageVector = Icons.Default.Delete,
+                                imageVector = delete,
                                 contentDescription = "清空历史"
                             )
                         }

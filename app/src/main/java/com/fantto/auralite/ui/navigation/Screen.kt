@@ -1,10 +1,9 @@
 package com.fantto.auralite.ui.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.fantto.auralite.ui.icons.chat
+import com.fantto.auralite.ui.icons.history
+import com.fantto.auralite.ui.icons.settings
 
 sealed class Screen(
     val route: String,
@@ -14,18 +13,18 @@ sealed class Screen(
     data object Chat : Screen(
         route = "chat",
         title = "对话",
-        icon = Icons.Default.Phone
+        icon = chat
     )
 
     data object History : Screen(
         route = "history",
         title = "历史",
-        icon = Icons.Default.Menu
+        icon = history
     )
 
     data object Settings : Screen(
         route = "settings",
         title = "设置",
-        icon = Icons.Default.Settings
+        icon = settings
     )
 }

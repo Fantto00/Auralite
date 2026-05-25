@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.fantto.auralite.domain.model.ChatState
 import com.fantto.auralite.service.VoiceRecognitionService
+import com.fantto.auralite.ui.icons.delete
 import com.fantto.auralite.ui.screen.chat.components.ChatInputBar
 import com.fantto.auralite.ui.screen.chat.components.MessageBubble
 
@@ -73,7 +72,7 @@ fun ChatScreen(
                 actions = {
                     IconButton(onClick = { viewModel.clearConversation() }) {
                         Icon(
-                            imageVector = Icons.Default.Delete,
+                            imageVector = delete,
                             contentDescription = "清空对话"
                         )
                     }
