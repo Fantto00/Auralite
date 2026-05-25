@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elvishew.xlog.XLog
 import com.fantto.auralite.domain.model.ChatState
+import com.fantto.auralite.domain.repository.PlaybackState
 import com.fantto.auralite.domain.repository.SettingsRepository
 import com.fantto.auralite.domain.usecase.llm.SendMessageUseCase
 import com.fantto.auralite.domain.usecase.tts.PlayAudioUseCase
 import com.fantto.auralite.domain.usecase.tts.SynthesizeSpeechUseCase
+import com.fantto.auralite.service.VoiceRecognitionService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,15 +40,47 @@ class ChatViewModel(
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
+    private val _isSending = MutableStateFlow(false)
+    val isSending: StateFlow<Boolean> = _isSending.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
     private var currentStreamingMessageId: String? = null
     private var ttsJob: Job? = null
+    private var sendJob: Job? = null
+
+    init {
+        observeVoiceRecognition()
+    }
+
+    private fun observeVoiceRecognition() {
+        viewModelScope.launch {
+            VoiceRecognitionService.transcription.collect { result ->
+                if (result.isNotEmpty()) {
+                    _inputText.value = result
+                    XLog.d("ChatViewModel：识别结果填入 $result")
+                }
+            }
+        }
+        viewModelScope.launch {
+            VoiceRecognitionService.isRunning.collect { running ->
+                _isListening.value = running
+            }
+        }
+    }
 
     fun updateInputText(text: String) {
         _inputText.value = text
     }
 
     fun sendMessage(text: String) {
-        if (text.isBlank()) return
+        if (text.isBlank() || _isSending.value) return
+
+        sendJob?.cancel()
+        ttsJob?.cancel()
+        _isPlaying.value = false
+        playAudioUseCase.stop()
 
         val userMessage = MessageUiModel(
             id = UUID.randomUUID().toString(),
@@ -56,8 +90,10 @@ class ChatViewModel(
         )
         _messages.value = _messages.value + userMessage
         _inputText.value = ""
+        _errorMessage.value = null
 
-        viewModelScope.launch {
+        sendJob = viewModelScope.launch {
+            _isSending.value = true
             try {
                 sendMessageUseCase(text).collect { state ->
                     _chatState.value = state
@@ -78,20 +114,29 @@ class ChatViewModel(
                         }
                         is ChatState.Complete -> {
                             finishStreaming()
+                            _isSending.value = false
                             XLog.d("ChatViewModel：消息发送完成")
                         }
                         is ChatState.Error -> {
-                            updateStreamingMessage("错误: ${state.message}")
+                            _errorMessage.value = state.message
                             finishStreaming()
+                            _isSending.value = false
                             XLog.e("ChatViewModel：发送失败 ${state.message}")
                         }
                     }
                 }
             } catch (e: Exception) {
+                _errorMessage.value = e.message
+                _isSending.value = false
                 XLog.e("ChatViewModel：异常 ${e.message}")
-                _chatState.value = ChatState.Error(e.message ?: "Unknown error")
             }
         }
+    }
+
+    fun retryLastMessage() {
+        val lastUserMessage = _messages.value.lastOrNull { it.isFromUser } ?: return
+        _messages.value = _messages.value.dropLast(1)
+        sendMessage(lastUserMessage.content)
     }
 
     private fun updateStreamingMessage(content: String) {
@@ -120,6 +165,11 @@ class ChatViewModel(
     fun speakLastMessage() {
         val lastAiMessage = _messages.value.lastOrNull { !it.isFromUser } ?: return
 
+        if (_isPlaying.value) {
+            stopSpeaking()
+            return
+        }
+
         ttsJob?.cancel()
         ttsJob = viewModelScope.launch {
             try {
@@ -133,11 +183,13 @@ class ChatViewModel(
 
                 playAudioUseCase(audioData.toByteArray()).collect { state ->
                     when (state) {
-                        is com.fantto.auralite.domain.repository.PlaybackState.Completed -> {
+                        is PlaybackState.Completed -> {
                             _isPlaying.value = false
+                            XLog.d("ChatViewModel：播放完成")
                         }
-                        is com.fantto.auralite.domain.repository.PlaybackState.Error -> {
+                        is PlaybackState.Error -> {
                             _isPlaying.value = false
+                            _errorMessage.value = "播放失败: ${state.message}"
                             XLog.e("ChatViewModel：播放失败 ${state.message}")
                         }
                         else -> {}
@@ -156,15 +208,27 @@ class ChatViewModel(
         _isPlaying.value = false
     }
 
+    fun clearError() {
+        _errorMessage.value = null
+    }
+
     fun clearConversation() {
+        sendJob?.cancel()
+        ttsJob?.cancel()
+        _isSending.value = false
+        _isPlaying.value = false
+        playAudioUseCase.stop()
         sendMessageUseCase.clearHistory()
         _messages.value = emptyList()
         _chatState.value = ChatState.Complete
+        _errorMessage.value = null
         XLog.d("ChatViewModel：清空对话")
     }
 
     override fun onCleared() {
         super.onCleared()
-        stopSpeaking()
+        sendJob?.cancel()
+        ttsJob?.cancel()
+        playAudioUseCase.stop()
     }
 }

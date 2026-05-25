@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,6 +19,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,10 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.fantto.auralite.domain.model.ChatState
 import com.fantto.auralite.service.VoiceRecognitionService
 import com.fantto.auralite.ui.screen.chat.components.ChatInputBar
@@ -46,13 +46,23 @@ fun ChatScreen(
     val chatState by viewModel.chatState.collectAsState()
     val inputText by viewModel.inputText.collectAsState()
     val isListening by viewModel.isListening.collectAsState()
-    val partialResult by VoiceRecognitionService.partialResult.collectAsState()
+    val isPlaying by viewModel.isPlaying.collectAsState()
+    val isSending by viewModel.isSending.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     val listState = rememberLazyListState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
+        }
+    }
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
         }
     }
 
@@ -70,11 +80,12 @@ fun ChatScreen(
                 }
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (chatState is ChatState.Loading) {
+                if (isSending) {
                     CircularProgressIndicator(
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
@@ -94,7 +105,8 @@ fun ChatScreen(
                             VoiceRecognitionService.startService(context)
                         }
                     },
-                    isListening = isListening
+                    isListening = isListening,
+                    isSending = isSending
                 )
             }
         }
@@ -121,7 +133,26 @@ fun ChatScreen(
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
                 items(messages, key = { it.id }) { message ->
-                    MessageBubble(message = message)
+                    MessageBubble(
+                        message = message,
+                        isPlaying = isPlaying && !message.isFromUser && message == messages.lastOrNull { !it.isFromUser },
+                        onTogglePlayback = { viewModel.speakLastMessage() }
+                    )
+                }
+
+                if (chatState is ChatState.Error) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Button(onClick = { viewModel.retryLastMessage() }) {
+                                Text("重试")
+                            }
+                        }
+                    }
                 }
             }
         }

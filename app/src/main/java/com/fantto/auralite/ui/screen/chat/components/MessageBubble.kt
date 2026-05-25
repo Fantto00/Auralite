@@ -1,6 +1,12 @@
 package com.fantto.auralite.ui.screen.chat.components
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,8 +24,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.fantto.auralite.ui.screen.chat.MessageUiModel
@@ -27,6 +35,8 @@ import com.fantto.auralite.ui.screen.chat.MessageUiModel
 @Composable
 fun MessageBubble(
     message: MessageUiModel,
+    isPlaying: Boolean = false,
+    onTogglePlayback: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isUser = message.isFromUser
@@ -76,11 +86,26 @@ fun MessageBubble(
                     .animateContentSize()
                     .padding(12.dp)
             ) {
-                Text(
-                    text = if (message.isStreaming && message.content.isEmpty()) "..." else message.content,
-                    color = if (isUser) MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyLarge
+                if (message.isStreaming) {
+                    StreamingText(
+                        text = message.content,
+                        isUser = isUser
+                    )
+                } else {
+                    Text(
+                        text = message.content,
+                        color = if (isUser) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+
+            if (!isUser && !message.isStreaming && message.content.isNotEmpty()) {
+                PlaybackIndicator(
+                    isPlaying = isPlaying,
+                    onTogglePlayback = onTogglePlayback,
+                    modifier = Modifier.padding(top = 2.dp)
                 )
             }
         }
@@ -100,6 +125,57 @@ fun MessageBubble(
                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun StreamingText(
+    text: String,
+    isUser: Boolean
+) {
+    val textColor = if (isUser) MaterialTheme.colorScheme.onPrimary
+    else MaterialTheme.colorScheme.onSurfaceVariant
+
+    if (text.isEmpty()) {
+        val infiniteTransition = rememberInfiniteTransition(label = "cursor")
+        val cursorAlpha by infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = 0f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(500, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "cursorAlpha"
+        )
+
+        Text(
+            text = "▋",
+            color = textColor.copy(alpha = cursorAlpha),
+            style = MaterialTheme.typography.bodyLarge
+        )
+    } else {
+        Row {
+            Text(
+                text = text,
+                color = textColor,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            val infiniteTransition = rememberInfiniteTransition(label = "cursor")
+            val cursorAlpha by infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 0f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(500, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "cursorAlpha"
+            )
+            Text(
+                text = "▋",
+                color = textColor.copy(alpha = cursorAlpha),
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
     }
 }

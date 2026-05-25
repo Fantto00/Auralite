@@ -1,6 +1,5 @@
 package com.fantto.auralite.ui.screen.chat.components
 
-import android.R.attr.contentDescription
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,7 +8,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -28,6 +27,7 @@ fun ChatInputBar(
     onSendClick: () -> Unit,
     onVoiceClick: () -> Unit,
     isListening: Boolean,
+    isSending: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -42,7 +42,8 @@ fun ChatInputBar(
             modifier = Modifier.weight(1f),
             placeholder = { Text("输入消息...") },
             shape = RoundedCornerShape(24.dp),
-            maxLines = 4
+            maxLines = 4,
+            enabled = !isSending
         )
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -50,13 +51,14 @@ fun ChatInputBar(
         if (inputText.isBlank()) {
             IconButton(
                 onClick = onVoiceClick,
+                enabled = !isSending,
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = if (isListening) MaterialTheme.colorScheme.error
                     else MaterialTheme.colorScheme.primaryContainer
                 )
             ) {
                 Icon(
-                    imageVector = Icons.Default.Phone,
+                    imageVector = Icons.Default.Info,
                     contentDescription = "语音输入",
                     tint = if (isListening) MaterialTheme.colorScheme.onError
                     else MaterialTheme.colorScheme.onPrimaryContainer
@@ -65,6 +67,7 @@ fun ChatInputBar(
         } else {
             IconButton(
                 onClick = onSendClick,
+                enabled = !isSending,
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
