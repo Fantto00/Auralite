@@ -22,6 +22,7 @@ import com.fantto.auralite.domain.usecase.tts.PlayAudioUseCase
 import com.fantto.auralite.domain.usecase.tts.SynthesizeSpeechUseCase
 import com.fantto.auralite.util.AudioPlayer
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
@@ -53,10 +54,15 @@ class AppModule(private val context: Context) {
 
     // OkHttp 客户端
     private val okHttpClient: OkHttpClient by lazy {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+        
         OkHttpClient.Builder()
             //添加okhttp拦截器，动态切换baseUrl和添加认证信息
             .addInterceptor(DynamicBaseUrlInterceptor(settingsDataStore, DEFAULT_BASE_URL))
             .addInterceptor(AuthInterceptor(settingsDataStore))
+            .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
