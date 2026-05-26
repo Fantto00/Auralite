@@ -59,7 +59,7 @@ class ChatViewModel(
             VoiceRecognitionService.transcription.collect { result ->
                 if (result.isNotEmpty()) {
                     _inputText.value = result
-                    XLog.d("ChatViewModel：识别结果填入 $result")
+                    XLog.d("XLog ChatViewModel：识别结果填入 $result")
                 }
             }
         }
@@ -115,20 +115,20 @@ class ChatViewModel(
                         is ChatState.Complete -> {
                             finishStreaming()
                             _isSending.value = false
-                            XLog.d("ChatViewModel：消息发送完成")
+                            XLog.d("XLog ChatViewModel：消息发送完成")
                         }
                         is ChatState.Error -> {
                             _errorMessage.value = state.message
                             finishStreaming()
                             _isSending.value = false
-                            XLog.e("ChatViewModel：发送失败 ${state.message}")
+                            XLog.e("XLog ChatViewModel：发送失败 ${state.message}")
                         }
                     }
                 }
             } catch (e: Exception) {
                 _errorMessage.value = e.message
                 _isSending.value = false
-                XLog.e("ChatViewModel：异常 ${e.message}")
+                XLog.e("XLog ChatViewModel：异常 ${e.message}")
             }
         }
     }
@@ -185,19 +185,19 @@ class ChatViewModel(
                     when (state) {
                         is PlaybackState.Completed -> {
                             _isPlaying.value = false
-                            XLog.d("ChatViewModel：播放完成")
+                            XLog.d("XLog ChatViewModel：播放完成")
                         }
                         is PlaybackState.Error -> {
                             _isPlaying.value = false
                             _errorMessage.value = "播放失败: ${state.message}"
-                            XLog.e("ChatViewModel：播放失败 ${state.message}")
+                            XLog.e("XLog ChatViewModel：播放失败 ${state.message}")
                         }
                         else -> {}
                     }
                 }
             } catch (e: Exception) {
                 _isPlaying.value = false
-                XLog.e("ChatViewModel：TTS异常 ${e.message}")
+                XLog.e("XLog ChatViewModel：TTS异常 ${e.message}")
             }
         }
     }
@@ -222,7 +222,7 @@ class ChatViewModel(
         _messages.value = emptyList()
         _chatState.value = ChatState.Complete
         _errorMessage.value = null
-        XLog.d("ChatViewModel：清空对话")
+        XLog.d("XLog ChatViewModel：清空对话")
     }
 
     override fun onCleared() {

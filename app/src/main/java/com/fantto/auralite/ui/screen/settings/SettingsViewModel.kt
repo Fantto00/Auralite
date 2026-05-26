@@ -55,7 +55,7 @@ class SettingsViewModel(
             _ttsVoice.value = settingsRepository.ttsVoice.first()
             _ttsSpeed.value = settingsRepository.ttsSpeed.first()
             _sttLanguage.value = settingsRepository.sttLanguage.first()
-            XLog.d("SettingsViewModel：配置加载完成")
+            XLog.d("XLog SettingsViewModel：配置加载完成")
         }
     }
 
@@ -107,9 +107,9 @@ class SettingsViewModel(
                 )
                 settingsRepository.saveSttLanguage(_sttLanguage.value)
                 _saveSuccess.value = true
-                XLog.d("SettingsViewModel：配置保存成功")
+                XLog.d("XLog SettingsViewModel：配置保存成功")
             } catch (e: Exception) {
-                XLog.e("SettingsViewModel：配置保存失败 ${e.message}")
+                XLog.e("XLog SettingsViewModel：配置保存失败 ${e.message}")
             }
         }
     }

@@ -37,7 +37,7 @@ class HistoryViewModel(
                     )
                 }
                 _isLoading.value = false
-                XLog.d("HistoryViewModel：加载了 ${_conversations.value.size} 个对话")
+                XLog.d("XLog HistoryViewModel：加载了 ${_conversations.value.size} 个对话")
             }
         }
     }
@@ -46,9 +46,9 @@ class HistoryViewModel(
         viewModelScope.launch {
             try {
                 chatRepository.deleteConversation(id)
-                XLog.d("HistoryViewModel：删除对话 $id")
+                XLog.d("XLog HistoryViewModel：删除对话 $id")
             } catch (e: Exception) {
-                XLog.e("HistoryViewModel：删除失败 ${e.message}")
+                XLog.e("XLog HistoryViewModel：删除失败 ${e.message}")
             }
         }
     }

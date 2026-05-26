@@ -45,20 +45,20 @@ class AudioPlayer {
             .build()
 
         audioTrack?.play()
-        XLog.d("AudioPlayer：开始播放")
+        XLog.d("XLog AudioPlayer：开始播放")
         emit(PlaybackState.Playing)
 
         audioTrack?.write(audioData, 0, audioData.size)
 
         emit(PlaybackState.Completed)
-        XLog.d("AudioPlayer：播放完成")
+        XLog.d("XLog AudioPlayer：播放完成")
     }.flowOn(Dispatchers.IO)
 
     fun stop() {
         audioTrack?.stop()
         audioTrack?.release()
         audioTrack = null
-        XLog.d("AudioPlayer：停止播放")
+        XLog.d("XLog AudioPlayer：停止播放")
     }
 
     fun isPlaying(): Boolean {

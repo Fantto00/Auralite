@@ -38,15 +38,15 @@ class SendMessageUseCase(
         conversationHistory.add(ChatMessage(role = "assistant", content = fullResponse))
 
         emit(ChatState.Complete)
-        XLog.d("SendMessageUseCase：对话完成，历史消息数 ${conversationHistory.size}")
+        XLog.d("XLog SendMessageUseCase：对话完成，历史消息数 ${conversationHistory.size}")
     }.catch { e ->
-        XLog.e("SendMessageUseCase：发送失败 ${e.message}")
+        XLog.e("XLog SendMessageUseCase：发送失败 ${e.message}")
         emit(ChatState.Error(e.message ?: "Unknown error"))
     }
 
     fun clearHistory() {
         conversationHistory.clear()
-        XLog.d("SendMessageUseCase：清空历史记录")
+        XLog.d("XLog SendMessageUseCase：清空历史记录")
     }
 
     fun getHistory(): List<ChatMessage> = conversationHistory.toList()

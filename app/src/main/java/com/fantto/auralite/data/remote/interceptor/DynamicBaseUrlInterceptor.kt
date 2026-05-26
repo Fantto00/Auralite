@@ -44,7 +44,7 @@ class DynamicBaseUrlInterceptor(
             .url(newUrl)
             .build()
 
-        XLog.d("DynamicBaseUrlInterceptor：请求URL ${newRequest.url}")
+        XLog.d("XLog DynamicBaseUrlInterceptor：请求URL ${newRequest.url}")
 
         return chain.proceed(newRequest)
     }

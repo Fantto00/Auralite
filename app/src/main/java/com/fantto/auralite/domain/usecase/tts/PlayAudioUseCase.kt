@@ -9,12 +9,12 @@ class PlayAudioUseCase(
     private val audioRepository: AudioRepository
 ) {
     operator fun invoke(audioData: ByteArray): Flow<PlaybackState> {
-        XLog.d("PlayAudioUseCase：播放音频，大小 ${audioData.size} bytes")
+        XLog.d("XLog PlayAudioUseCase：播放音频，大小 ${audioData.size} bytes")
         return audioRepository.playAudio(audioData)
     }
 
     fun stop() {
-        XLog.d("PlayAudioUseCase：停止播放")
+        XLog.d("XLog PlayAudioUseCase：停止播放")
         audioRepository.stopPlayback()
     }
 }

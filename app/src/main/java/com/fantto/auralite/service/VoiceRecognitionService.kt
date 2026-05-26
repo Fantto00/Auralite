@@ -86,7 +86,7 @@ class VoiceRecognitionService : Service() {
         releaseWakeLock()
         serviceScope.cancel()
         _isRunning.value = false
-        XLog.d("VoiceRecognitionService : Service 结束")
+        XLog.d("XLog VoiceRecognitionService : Service 结束")
     }
 
     // 启动语音识别引擎，并监听结果更新
@@ -112,9 +112,9 @@ class VoiceRecognitionService : Service() {
                     }
                 }
 
-                XLog.d("VoiceRecognitionService : 开始识别")
+                XLog.d("XLog VoiceRecognitionService : 开始识别")
             } catch (e: Exception) {
-                XLog.e("VoiceRecognitionService ：开启识别失败 ，异常：$e")
+                XLog.e("XLog VoiceRecognitionService ：开启识别失败 ，异常：$e")
                 stopSelf()
             }
         }
@@ -124,7 +124,7 @@ class VoiceRecognitionService : Service() {
         voskEngine?.release()
         voskEngine = null
         _isRunning.value = false
-        XLog.d("VoiceRecognitionService : 停止识别")
+        XLog.d("XLog VoiceRecognitionService : 停止识别")
     }
 
     private fun createNotificationChannel() {

@@ -52,7 +52,7 @@ class VoskEngine(
         val modelPath = VoskModelManager.getModelPath(context)
         model = Model(modelPath)
         recognizer = Recognizer(model, SAMPLE_RATE_FLOAT)
-        XLog.d("VoskEngine：初始化路径 $modelPath")
+        XLog.d("XLog VoskEngine：初始化路径 $modelPath")
     }
 
     override fun startListening() {
@@ -61,7 +61,7 @@ class VoskEngine(
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            XLog.e("VoskEngine：未授予RECORD_AUDIO权限")
+            XLog.e("XLog VoskEngine：未授予RECORD_AUDIO权限")
             return
         }
 
@@ -93,14 +93,14 @@ class VoskEngine(
                         val result = rec.result
                         val text = parseResultText(result)
                         if (text.isNotEmpty()) {
-                            XLog.d("VoskEngine：识别结果 $text")
+                            XLog.d("XLog VoskEngine：识别结果 $text")
                             _transcription.emit(text)
                         }
                     } else {
                         val partial = rec.partialResult
                         val text = parsePartialText(partial)
                         if (text.isNotEmpty()) {
-                            XLog.d("VoskEngine：实时识别 $text")
+                            XLog.d("XLog VoskEngine：实时识别 $text")
                             _partialResult.emit(text)
                         }
                     }
@@ -110,12 +110,12 @@ class VoskEngine(
             val finalResult = rec.finalResult
             val text = parseResultText(finalResult)
             if (text.isNotEmpty()) {
-                XLog.d("VoskEngine：最终结果 $text")
+                XLog.d("XLog VoskEngine：最终结果 $text")
                 _transcription.emit(text)
             }
         }
 
-        XLog.d("VoskEngine：开始监听")
+        XLog.d("XLog VoskEngine：开始监听")
     }
 
     override fun stopListening() {
@@ -129,7 +129,7 @@ class VoskEngine(
         audioRecord?.release()
         audioRecord = null
 
-        XLog.d("VoskEngine：停止监听")
+        XLog.d("XLog VoskEngine：停止监听")
     }
 
     override fun observeTranscription(): Flow<String> = _transcription
@@ -144,7 +144,7 @@ class VoskEngine(
         recognizer = null
         model?.close()
         model = null
-        XLog.d("VoskEngine：释放资源")
+        XLog.d("XLog VoskEngine：释放资源")
     }
 
     private fun parseResultText(json: String): String {

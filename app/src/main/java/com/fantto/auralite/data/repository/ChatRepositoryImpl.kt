@@ -56,7 +56,7 @@ class ChatRepositoryImpl(
                             }
                         } catch (e: Exception) {
                             // 解析失败，跳过
-                            XLog.e("ChatRepositoryImpl:json解析失败，异常：${e.message}")
+                            XLog.e("XLog ChatRepositoryImpl:json解析失败，异常：${e.message}")
                         }
                     }
                 }

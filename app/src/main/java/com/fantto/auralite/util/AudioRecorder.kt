@@ -29,7 +29,7 @@ class AudioRecorder(private val context: Context) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            XLog.e("AudioRecorder：未授予RECORD_AUDIO权限")
+            XLog.e("XLog AudioRecorder：未授予RECORD_AUDIO权限")
             return@flow
         }
 
@@ -48,7 +48,7 @@ class AudioRecorder(private val context: Context) {
         )
 
         recorder?.startRecording()
-        XLog.d("AudioRecorder：开始录音")
+        XLog.d("XLog AudioRecorder：开始录音")
 
         val buffer = ByteArray(BUFFER_SIZE)
         // 在flow构建器中，isActive是FlowCollector的属性，但在flow { }块中直接使用isActive是不正确的。应该使用currentCoroutineContext().isActive
@@ -65,7 +65,7 @@ class AudioRecorder(private val context: Context) {
         recorder?.stop()
         recorder?.release()
         recorder = null
-        XLog.d("AudioRecorder：停止录音")
+        XLog.d("XLog AudioRecorder：停止录音")
     }
 
     fun isRecording(): Boolean {

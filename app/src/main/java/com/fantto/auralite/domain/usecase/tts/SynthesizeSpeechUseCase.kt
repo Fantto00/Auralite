@@ -15,7 +15,7 @@ class SynthesizeSpeechUseCase(
         val voice = settingsRepository.ttsVoice.first()
         val speed = settingsRepository.ttsSpeed.first()
 
-        XLog.d("SynthesizeSpeechUseCase：合成语音 model=$model, voice=$voice, speed=$speed")
+        XLog.d("XLog SynthesizeSpeechUseCase：合成语音 model=$model, voice=$voice, speed=$speed")
 
         return audioRepository.synthesizeSpeech(text, model, voice, speed)
     }
