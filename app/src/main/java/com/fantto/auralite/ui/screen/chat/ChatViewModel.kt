@@ -95,6 +95,7 @@ class ChatViewModel(
         sendJob = viewModelScope.launch {
             _isSending.value = true
             try {
+                XLog.d("XLog ChatViewModel：collect消息流")
                 sendMessageUseCase(text).collect { state ->
                     _chatState.value = state
                     when (state) {

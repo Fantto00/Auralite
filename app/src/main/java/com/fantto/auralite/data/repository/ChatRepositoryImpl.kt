@@ -34,6 +34,7 @@ class ChatRepositoryImpl(
             model = model,
             messages = messages
         )
+        XLog.d("XLog ChatRepositoryImpl：准备进入llmApiService发送请求，model=$model, 消息数 ${messages.size}")
         val response = llmApiService.streamChat(request)
 
         if (response.isSuccessful) {

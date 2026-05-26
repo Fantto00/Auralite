@@ -25,6 +25,7 @@ class SendMessageUseCase(
 
         val model = settingsRepository.llmModel.first()
         val messages = conversationHistory.toList()
+        XLog.d("XLog SendMessageUseCase：发送消息 model=$model, 消息数 ${messages.size}")
 
         var fullResponse = ""
 
