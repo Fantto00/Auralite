@@ -28,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.fantto.auralite.ui.icons.ai_icon
-import com.example.test.person_raised_hand
+import com.fantto.auralite.ui.icons.person_raised_hand
 import com.fantto.auralite.ui.screen.chat.MessageUiModel
 
 @Composable
