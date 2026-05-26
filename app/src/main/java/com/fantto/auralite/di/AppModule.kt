@@ -9,6 +9,7 @@ import com.fantto.auralite.data.local.datastore.SettingsDataStore
 import com.fantto.auralite.data.remote.api.LlmApiService
 import com.fantto.auralite.data.remote.api.TtsApiService
 import com.fantto.auralite.data.remote.interceptor.AuthInterceptor
+import com.fantto.auralite.data.remote.interceptor.DynamicBaseUrlInterceptor
 import com.fantto.auralite.data.repository.AudioRepositoryImpl
 import com.fantto.auralite.data.repository.ChatRepositoryImpl
 import com.fantto.auralite.data.repository.SettingsRepositoryImpl
@@ -26,6 +27,10 @@ import java.util.concurrent.TimeUnit
 
 /** 应用程序的依赖注入模块，负责创建和提供应用所需的各种组件实例 **/
 class AppModule(private val context: Context) {
+
+    companion object {
+        private const val DEFAULT_BASE_URL = "https://api.openai.com/"
+    }
 
     //本地api配置存储类的实例
     val settingsDataStore: SettingsDataStore by lazy {
@@ -48,6 +53,8 @@ class AppModule(private val context: Context) {
     // OkHttp 客户端
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
+            //添加okhttp拦截器，动态切换baseUrl和添加认证信息
+            .addInterceptor(DynamicBaseUrlInterceptor(settingsDataStore, DEFAULT_BASE_URL))
             .addInterceptor(AuthInterceptor(settingsDataStore))
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
@@ -58,7 +65,7 @@ class AppModule(private val context: Context) {
     // LLM Retrofit 实例
     private val llmRetrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl("https://api.openai.com/")
+            .baseUrl(DEFAULT_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -67,7 +74,7 @@ class AppModule(private val context: Context) {
     // TTS Retrofit 实例
     private val ttsRetrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl("https://api.openai.com/")
+            .baseUrl(DEFAULT_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
