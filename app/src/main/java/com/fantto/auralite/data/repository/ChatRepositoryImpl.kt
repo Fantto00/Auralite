@@ -51,7 +51,7 @@ class ChatRepositoryImpl(
                             val choices = jsonObject.getAsJsonArray("choices")
                             if (choices != null && choices.size() > 0) {
                                 val delta = choices.get(0).asJsonObject.getAsJsonObject("delta")
-                                if (delta != null && delta.has("content")) {
+                                if (delta != null && delta.has("content") && !delta.get("content").isJsonNull) {
                                     emit(delta.get("content").asString)
                                 }
                             }
