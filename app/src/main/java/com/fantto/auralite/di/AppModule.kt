@@ -20,6 +20,7 @@ import com.fantto.auralite.domain.repository.SettingsRepository
 import com.fantto.auralite.domain.usecase.llm.SendMessageUseCase
 import com.fantto.auralite.domain.usecase.tts.PlayAudioUseCase
 import com.fantto.auralite.domain.usecase.tts.SynthesizeSpeechUseCase
+import com.fantto.auralite.util.AudioPlayer
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -98,8 +99,13 @@ class AppModule(private val context: Context) {
         SettingsRepositoryImpl(settingsDataStore)
     }
 
+    // AudioPlayer 实例
+    private val audioPlayer: AudioPlayer by lazy {
+        AudioPlayer()
+    }
+
     val audioRepository: AudioRepository by lazy {
-        AudioRepositoryImpl(context, ttsApiService)
+        AudioRepositoryImpl(ttsApiService, audioPlayer)
     }
 
     // STT语音识别 Engine 实例

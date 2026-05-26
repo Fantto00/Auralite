@@ -4,6 +4,7 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 import com.elvishew.xlog.XLog
+import com.fantto.auralite.domain.repository.PlaybackState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -45,20 +46,20 @@ class AudioPlayer {
             .build()
 
         audioTrack?.play()
-        XLog.d("XLog AudioPlayer：开始播放")
+        XLog.d("AudioPlayer：开始播放")
         emit(PlaybackState.Playing)
 
         audioTrack?.write(audioData, 0, audioData.size)
 
         emit(PlaybackState.Completed)
-        XLog.d("XLog AudioPlayer：播放完成")
+        XLog.d("AudioPlayer：播放完成")
     }.flowOn(Dispatchers.IO)
 
     fun stop() {
         audioTrack?.stop()
         audioTrack?.release()
         audioTrack = null
-        XLog.d("XLog AudioPlayer：停止播放")
+        XLog.d("AudioPlayer：停止播放")
     }
 
     fun isPlaying(): Boolean {
@@ -68,11 +69,4 @@ class AudioPlayer {
     fun release() {
         stop()
     }
-}
-
-sealed class PlaybackState {
-    data object Idle : PlaybackState()
-    data object Playing : PlaybackState()
-    data object Completed : PlaybackState()
-    data class Error(val message: String) : PlaybackState()
 }
