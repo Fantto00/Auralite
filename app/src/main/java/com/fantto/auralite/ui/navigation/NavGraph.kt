@@ -13,10 +13,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.fantto.auralite.App
 import com.fantto.auralite.di.ViewModelFactory
 import com.fantto.auralite.ui.screen.chat.ChatScreen
@@ -72,9 +74,31 @@ fun AuraliteNavGraph() {
                 val chatViewModel: ChatViewModel = viewModel(factory = viewModelFactory)
                 ChatScreen(viewModel = chatViewModel)
             }
+            composable(
+                route = Screen.Chat.route + "/{conversationId}",
+                arguments = listOf(
+                    navArgument("conversationId") {
+                        type = NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+                val conversationId = backStackEntry.arguments?.getString("conversationId") ?: ""
+                val chatViewModel: ChatViewModel = viewModel(factory = viewModelFactory)
+                chatViewModel.loadConversation(conversationId)
+                ChatScreen(viewModel = chatViewModel)
+            }
             composable(Screen.History.route) {
                 val historyViewModel: HistoryViewModel = viewModel(factory = viewModelFactory)
-                HistoryScreen(viewModel = historyViewModel)
+                HistoryScreen(
+                    viewModel = historyViewModel,
+                    onConversationClick = { conversationId ->
+                        navController.navigate(Screen.Chat.route + "/$conversationId") {
+                            popUpTo(Screen.Chat.route) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                )
             }
             composable(Screen.Settings.route) {
                 val settingsViewModel: SettingsViewModel = viewModel(factory = viewModelFactory)

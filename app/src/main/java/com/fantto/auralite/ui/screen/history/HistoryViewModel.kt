@@ -27,15 +27,18 @@ class HistoryViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             chatRepository.getConversations().collect { conversationList ->
-                _conversations.value = conversationList.map { conversation ->
+                val uiModels = conversationList.map { conversation ->
+                    val messageCount = chatRepository.getMessageCount(conversation.id)
+                    val lastMessage = chatRepository.getLastMessage(conversation.id) ?: ""
                     ConversationUiModel(
                         id = conversation.id,
                         title = conversation.title,
-                        lastMessage = "",
-                        messageCount = 0,
+                        lastMessage = lastMessage,
+                        messageCount = messageCount,
                         updatedAt = conversation.updatedAt
                     )
                 }
+                _conversations.value = uiModels
                 _isLoading.value = false
                 XLog.d("XLog HistoryViewModel：加载了 ${_conversations.value.size} 个对话")
             }

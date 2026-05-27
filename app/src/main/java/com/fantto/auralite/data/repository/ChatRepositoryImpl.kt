@@ -99,6 +99,14 @@ class ChatRepositoryImpl(
         return conversationDao.getMessagesByConversationId(conversationId)
     }
 
+    override suspend fun getMessageCount(conversationId: String): Int {
+        return conversationDao.getMessageCount(conversationId)
+    }
+
+    override suspend fun getLastMessage(conversationId: String): String? {
+        return conversationDao.getLastMessage(conversationId)
+    }
+
     override suspend fun deleteConversation(conversationId: String) {
         conversationDao.deleteMessagesByConversationId(conversationId)
         val conversation = conversationDao.getConversationById(conversationId)

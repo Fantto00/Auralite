@@ -3,7 +3,9 @@ package com.fantto.auralite.ui.screen.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elvishew.xlog.XLog
+import com.fantto.auralite.data.remote.dto.ChatMessage
 import com.fantto.auralite.domain.model.ChatState
+import com.fantto.auralite.domain.repository.ChatRepository
 import com.fantto.auralite.domain.repository.PlaybackState
 import com.fantto.auralite.domain.repository.SettingsRepository
 import com.fantto.auralite.domain.usecase.llm.SendMessageUseCase
@@ -22,7 +24,8 @@ class ChatViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
     private val synthesizeSpeechUseCase: SynthesizeSpeechUseCase,
     private val playAudioUseCase: PlayAudioUseCase,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val chatRepository: ChatRepository
 ) : ViewModel() {
 
     private val _messages = MutableStateFlow<List<MessageUiModel>>(emptyList())
@@ -117,6 +120,8 @@ class ChatViewModel(
                             finishStreaming()
                             _isSending.value = false
                             XLog.d("XLog ChatViewModel：消息发送完成")
+                            // 保存对话到数据库
+                            saveConversation()
                         }
                         is ChatState.Error -> {
                             _errorMessage.value = state.message
@@ -211,6 +216,56 @@ class ChatViewModel(
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    private fun saveConversation() {
+        viewModelScope.launch {
+            try {
+                val history = sendMessageUseCase.getHistory()
+                if (history.isNotEmpty()) {
+                    // 使用用户的第一条消息作为标题
+                    val title = history.firstOrNull { it.role == "user" }?.content?.take(50) ?: "新对话"
+                    chatRepository.saveConversation(title, history)
+                    XLog.d("XLog ChatViewModel：对话已保存，标题=$title")
+                }
+            } catch (e: Exception) {
+                XLog.e("XLog ChatViewModel：保存对话失败 ${e.message}")
+            }
+        }
+    }
+
+    fun loadConversation(conversationId: String) {
+        viewModelScope.launch {
+            try {
+                // 清空当前对话
+                sendMessageUseCase.clearHistory()
+                _messages.value = emptyList()
+                
+                // 从数据库加载消息
+                chatRepository.getMessagesByConversationId(conversationId).collect { messageEntities ->
+                    val chatMessages = messageEntities.map { entity ->
+                        ChatMessage(role = entity.role, content = entity.content)
+                    }
+                    
+                    // 设置SendMessageUseCase的历史记录
+                    sendMessageUseCase.setHistory(chatMessages)
+                    
+                    // 转换为UI模型并更新
+                    val uiMessages = messageEntities.map { entity ->
+                        MessageUiModel(
+                            id = entity.id,
+                            content = entity.content,
+                            isFromUser = entity.role == "user",
+                            timestamp = entity.timestamp
+                        )
+                    }
+                    _messages.value = uiMessages
+                    XLog.d("XLog ChatViewModel：加载了 ${uiMessages.size} 条消息")
+                }
+            } catch (e: Exception) {
+                XLog.e("XLog ChatViewModel：加载对话失败 ${e.message}")
+            }
+        }
     }
 
     fun clearConversation() {

@@ -51,4 +51,10 @@ class SendMessageUseCase(
     }
 
     fun getHistory(): List<ChatMessage> = conversationHistory.toList()
+
+    fun setHistory(messages: List<ChatMessage>) {
+        conversationHistory.clear()
+        conversationHistory.addAll(messages)
+        XLog.d("XLog SendMessageUseCase：设置历史记录，消息数 ${messages.size}")
+    }
 }

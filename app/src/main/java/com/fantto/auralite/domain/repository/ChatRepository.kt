@@ -19,5 +19,9 @@ interface ChatRepository {
 
     fun getMessagesByConversationId(conversationId: String): Flow<List<MessageEntity>>
 
+    suspend fun getMessageCount(conversationId: String): Int
+
+    suspend fun getLastMessage(conversationId: String): String?
+
     suspend fun deleteConversation(conversationId: String)
 }
