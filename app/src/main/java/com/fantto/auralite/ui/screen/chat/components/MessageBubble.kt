@@ -26,11 +26,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.fantto.auralite.ui.icons.ai_icon
 import com.fantto.auralite.ui.icons.person_raised_hand
 import com.fantto.auralite.ui.screen.chat.MessageUiModel
 
+// AI消息气泡组件，支持文本加粗和流式文本显示
 @Composable
 fun MessageBubble(
     message: MessageUiModel,
@@ -92,7 +97,7 @@ fun MessageBubble(
                     )
                 } else {
                     Text(
-                        text = message.content,
+                        text = parseMarkdownBold(message.content),
                         color = if (isUser) MaterialTheme.colorScheme.onPrimary
                         else MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyLarge
@@ -156,7 +161,7 @@ private fun StreamingText(
     } else {
         Row {
             Text(
-                text = text,
+                text = parseMarkdownBold(text),
                 color = textColor,
                 style = MaterialTheme.typography.bodyLarge
             )
@@ -176,5 +181,24 @@ private fun StreamingText(
                 style = MaterialTheme.typography.bodyLarge
             )
         }
+    }
+}
+
+// 简单的Markdown加粗解析器，支持**加粗**语法
+private val BOLD_REGEX = Regex("\\*\\*(.+?)\\*\\*", RegexOption.DOT_MATCHES_ALL)
+
+private fun parseMarkdownBold(text: String) = buildAnnotatedString {
+    var lastIndex = 0
+    
+    BOLD_REGEX.findAll(text).forEach { match ->
+        append(text.substring(lastIndex, match.range.first))
+        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+            append(match.groupValues[1])
+        }
+        lastIndex = match.range.last + 1
+    }
+    
+    if (lastIndex < text.length) {
+        append(text.substring(lastIndex))
     }
 }
