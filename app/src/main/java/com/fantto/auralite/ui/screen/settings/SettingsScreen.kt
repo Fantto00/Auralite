@@ -16,8 +16,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -33,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.fantto.auralite.ui.icons.arrow_back_ios
 import com.fantto.auralite.ui.screen.settings.components.ApiConfigItem
 import com.fantto.auralite.ui.screen.settings.components.SliderItem
 import com.fantto.auralite.ui.screen.settings.components.VoiceSelector
@@ -42,7 +39,6 @@ import com.fantto.auralite.ui.screen.settings.components.VoiceSelector
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
-    onBackClick: () -> Unit = {}
 ) {
     val llmBaseUrl by viewModel.llmBaseUrl.collectAsState()
     val llmApiKey by viewModel.llmApiKey.collectAsState()
@@ -66,15 +62,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("设置") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = arrow_back_ios,
-                            contentDescription = "返回"
-                        )
-                    }
-                }
+                title = { Text("设置") }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
