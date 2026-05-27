@@ -90,4 +90,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
     implementation("com.elvishew:xlog:1.11.1")
+
+    // 设备兼容框架：https://github.com/getActivity/DeviceCompat
+    implementation("com.github.getActivity:DeviceCompat:2.6")
+    // 权限请求框架：https://github.com/getActivity/XXPermissions
+    implementation("com.github.getActivity:XXPermissions:28.2")
 }
