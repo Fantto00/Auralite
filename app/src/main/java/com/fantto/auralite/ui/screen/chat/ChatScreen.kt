@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +35,8 @@ import com.fantto.auralite.service.VoiceRecognitionService
 import com.fantto.auralite.ui.icons.delete
 import com.fantto.auralite.ui.screen.chat.components.ChatInputBar
 import com.fantto.auralite.ui.screen.chat.components.MessageBubble
+import com.fantto.auralite.util.PermissionHelper
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +54,7 @@ fun ChatScreen(
 
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
@@ -101,7 +105,26 @@ fun ChatScreen(
                         if (isListening) {
                             VoiceRecognitionService.stopService(context)
                         } else {
-                            VoiceRecognitionService.startService(context)
+                            // 工具类检查权限
+                            PermissionHelper.requestRecordAudioPermission(
+                                context = context,
+                                onGranted = {
+                                    VoiceRecognitionService.startService(context)
+                                },
+                                onDenied = { doNotAskAgain ->
+                                    coroutineScope.launch {
+                                        if (doNotAskAgain) {
+                                            snackbarHostState.showSnackbar(
+                                                "麦克风权限被永久拒绝，请前往设置手动开启"
+                                            )
+                                        } else {
+                                            snackbarHostState.showSnackbar(
+                                                "需要麦克风权限才能使用语音识别"
+                                            )
+                                        }
+                                    }
+                                }
+                            )
                         }
                     },
                     isListening = isListening,
