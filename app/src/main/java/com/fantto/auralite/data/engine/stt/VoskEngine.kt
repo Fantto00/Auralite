@@ -45,6 +45,7 @@ class VoskEngine(
     private val _partialResult = MutableSharedFlow<String>()
 
     private var _isListening = false
+    private var accumulatedText = StringBuilder() // 累积文本缓冲区
 
     override suspend fun initialize() {
         if (model != null) return
@@ -82,6 +83,7 @@ class VoskEngine(
 
         audioRecord?.startRecording()
         _isListening = true
+        accumulatedText.clear() // 开始监听时重置累积文本
 
         recordingJob = CoroutineScope(Dispatchers.IO).launch {
             val buffer = ByteArray(BUFFER_SIZE)
@@ -94,8 +96,13 @@ class VoskEngine(
                         val result = rec.result
                         val text = parseResultText(result)
                         if (text.isNotEmpty()) {
-                            XLog.d("XLog VoskEngine：识别结果 $text")
-                            _transcription.emit(text)
+                            // 追加到累积文本
+                            if (accumulatedText.isNotEmpty()) {
+                                accumulatedText.append(" ")
+                            }
+                            accumulatedText.append(text)
+                            XLog.d("XLog VoskEngine：识别结果 $text，累积文本：$accumulatedText")
+                            _transcription.emit(accumulatedText.toString())
                         }
                     } else {
                         val partial = rec.partialResult
@@ -111,8 +118,13 @@ class VoskEngine(
             val finalResult = rec.finalResult
             val text = parseResultText(finalResult)
             if (text.isNotEmpty()) {
-                XLog.d("XLog VoskEngine：最终结果 $text")
-                _transcription.emit(text)
+                // 追加最终结果到累积文本
+                if (accumulatedText.isNotEmpty()) {
+                    accumulatedText.append(" ")
+                }
+                accumulatedText.append(text)
+                XLog.d("XLog VoskEngine：最终结果 $text，累积文本：$accumulatedText")
+                _transcription.emit(accumulatedText.toString())
             }
         }
 

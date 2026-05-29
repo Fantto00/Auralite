@@ -102,7 +102,12 @@ fun ChatScreen(
                 ChatInputBar(
                     inputText = inputText,
                     onTextChange = viewModel::updateInputText,
-                    onSendClick = { viewModel.sendMessage(inputText) },
+                    onSendClick = {
+                        if (isListening) {
+                            VoiceRecognitionService.stopService(context)
+                        }
+                        viewModel.sendMessage(inputText)
+                    },
                     onVoiceClick = {
                         if (isListening) {
                             VoiceRecognitionService.stopService(context)

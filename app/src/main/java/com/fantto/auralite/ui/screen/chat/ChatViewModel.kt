@@ -13,6 +13,7 @@ import com.fantto.auralite.domain.usecase.tts.PlayAudioUseCase
 import com.fantto.auralite.domain.usecase.tts.SynthesizeSpeechUseCase
 import com.fantto.auralite.service.VoiceRecognitionService
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,6 +53,7 @@ class ChatViewModel(
     private var currentStreamingMessageId: String? = null
     private var ttsJob: Job? = null
     private var sendJob: Job? = null
+    private var debounceJob: Job? = null // 去抖动定时器
 
     init {
         observeVoiceRecognition()
@@ -61,8 +63,14 @@ class ChatViewModel(
         viewModelScope.launch {
             VoiceRecognitionService.transcription.collect { result ->
                 if (result.isNotEmpty()) {
-                    _inputText.value = result
-                    XLog.d("XLog ChatViewModel：识别结果填入 $result")
+                    // 取消之前的去抖动定时器
+                    debounceJob?.cancel()
+                    // 启动新的去抖动定时器，300ms 后更新输入框
+                    debounceJob = viewModelScope.launch {
+                        delay(300)
+                        _inputText.value = result
+                        XLog.d("XLog ChatViewModel：识别结果填入 $result")
+                    }
                 }
             }
         }
@@ -78,7 +86,9 @@ class ChatViewModel(
     }
 
     fun sendMessage(text: String) {
-        if (text.isBlank() || _isSending.value) return
+        // 去除语音识别产生的空格分词
+        val cleanedText = text.replace(" ", "")
+        if (cleanedText.isBlank() || _isSending.value) return
 
         sendJob?.cancel()
         ttsJob?.cancel()
@@ -87,7 +97,7 @@ class ChatViewModel(
 
         val userMessage = MessageUiModel(
             id = UUID.randomUUID().toString(),
-            content = text,
+            content = cleanedText,
             isFromUser = true,
             timestamp = System.currentTimeMillis()
         )
@@ -99,7 +109,7 @@ class ChatViewModel(
             _isSending.value = true
             try {
                 XLog.d("XLog ChatViewModel：collect消息流")
-                sendMessageUseCase(text).collect { state ->
+                sendMessageUseCase(cleanedText).collect { state ->
                     _chatState.value = state
                     when (state) {
                         is ChatState.Loading -> {
