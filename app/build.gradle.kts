@@ -83,7 +83,14 @@ dependencies {
     ksp("androidx.room:room-compiler:2.8.4")
 
     // Vosk
-    implementation("com.alphacephei:vosk-android:0.3.45")
+    implementation("com.alphacephei:vosk-android:0.3.70")
+//    {
+//        exclude(group = "net.java.dev.jna", module = "jna")
+//        exclude(group = "net.java.dev.jna", module = "jna-platform")
+//    }
+
+//    implementation("net.java.dev.jna:jna:5.16.0@arr")
+//    implementation("net.java.dev.jna:jna-platform:5.16.0@aar")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
