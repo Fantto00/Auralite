@@ -50,9 +50,10 @@ class VoskEngine(
         if (model != null) return
 
         val modelPath = VoskModelManager.getModelPath(context)
+        XLog.d("XLog VoskEngine：模型获取路径 $modelPath")
         model = Model(modelPath)
+        XLog.d("XLog VoskEngine：模型加载完成")
         recognizer = Recognizer(model, SAMPLE_RATE_FLOAT)
-        XLog.d("XLog VoskEngine：初始化路径 $modelPath")
     }
 
     override fun startListening() {

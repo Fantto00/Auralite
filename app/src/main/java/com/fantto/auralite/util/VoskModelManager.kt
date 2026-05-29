@@ -1,6 +1,7 @@
 package com.fantto.auralite.util
 
 import android.content.Context
+import com.elvishew.xlog.XLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -21,7 +22,25 @@ object VoskModelManager {
             extractModel(context, modelDir)
         }
 
-        modelDir.absolutePath
+        // ZIP文件内部有顶级目录 vosk-model-small-cn-0.22/，需要返回实际的模型路径
+        val actualModelDir = findActualModelDir(modelDir)
+        XLog.d("VoskModelManager：模型路径 ${actualModelDir.absolutePath}")
+
+        actualModelDir.absolutePath
+    }
+
+    // 查找实际的模型目录（跳过ZIP顶级目录）
+    private fun findActualModelDir(modelDir: File): File {
+        val files = modelDir.listFiles()
+        // 如果只有一个子目录，且该子目录包含模型文件（如conf目录），则使用该子目录
+        if (files != null && files.size == 1 && files[0].isDirectory) {
+            val subDir = files[0]
+            if (File(subDir, "conf").exists() || File(subDir, "am").exists()) {
+                XLog.d("VoskModelManager：检测到ZIP顶级目录，使用子目录 ${subDir.name}")
+                return subDir
+            }
+        }
+        return modelDir
     }
 
     // 解压模型zip文件到指定目录

@@ -93,12 +93,16 @@ class VoiceRecognitionService : Service() {
     private fun startRecognition() {
         serviceScope.launch {
             try {
+                XLog.d("VoiceRecognitionService : 进入 startRecognition")
                 val app = application as App
                 voskEngine = VoskEngine(applicationContext)
+                XLog.d("VoiceRecognitionService : 获取到 VoskEngine 实例，准备初始化")
 
                 voskEngine?.initialize()
+                XLog.d("VoiceRecognitionService :初始化完成，准备开始监听")
                 voskEngine?.startListening()
                 _isRunning.value = true
+                XLog.d("VoiceRecognitionService : isRunning 为 true")
 
                 launch {
                     voskEngine?.observePartialResult()?.collect { result ->
