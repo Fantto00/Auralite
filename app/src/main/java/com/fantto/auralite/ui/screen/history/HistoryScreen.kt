@@ -1,6 +1,7 @@
 package com.fantto.auralite.ui.screen.history
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,6 +35,7 @@ fun HistoryScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("对话历史") },
+                windowInsets = WindowInsets(0),
                 actions = {
                     if (conversations.isNotEmpty()) {
                         IconButton(onClick = {

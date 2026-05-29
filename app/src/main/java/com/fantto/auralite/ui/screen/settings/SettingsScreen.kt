@@ -1,6 +1,7 @@
 package com.fantto.auralite.ui.screen.settings
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,7 +63,8 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("设置") }
+                title = { Text("设置") },
+                windowInsets = WindowInsets(0)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
