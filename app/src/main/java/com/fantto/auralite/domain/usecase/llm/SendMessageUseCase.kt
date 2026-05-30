@@ -28,13 +28,18 @@ class SendMessageUseCase(
         XLog.d("XLog SendMessageUseCase：发送消息 model=$model, 消息数 ${messages.size}")
 
         var fullResponse = ""
+        var chunkCount = 0
 
         //将消息发给大模型 分块返回
         chatRepository.sendMessage(model, messages)
             .collect { chunk ->
+                chunkCount++
                 fullResponse += chunk
+                XLog.d("XLog SendMessageUseCase：收到chunk #$chunkCount, 当前总长度=${fullResponse.length}")
                 emit(ChatState.Streaming(fullResponse))
             }
+
+        XLog.d("XLog SendMessageUseCase：流式接收完成，共 $chunkCount 个chunk，总长度=${fullResponse.length}")
 
         conversationHistory.add(ChatMessage(role = "assistant", content = fullResponse))
 

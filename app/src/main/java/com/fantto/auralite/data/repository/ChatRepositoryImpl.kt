@@ -37,14 +37,25 @@ class ChatRepositoryImpl(
         XLog.d("XLog ChatRepositoryImpl：准备进入llmApiService发送请求，model=$model, 消息数 ${messages.size}")
         val response = llmApiService.streamChat(request)
 
+        XLog.d("XLog ChatRepositoryImpl：API响应状态码=${response.code()}, isSuccessful=${response.isSuccessful}")
+
         if (response.isSuccessful) {
             response.body()?.byteStream()?.bufferedReader()?.use { reader ->
                 var line: String?
+                var chunkCount = 0
+                val startTime = System.currentTimeMillis()
+                XLog.d("XLog ChatRepositoryImpl：开始读取流式响应")
+
                 while (reader.readLine().also { line = it } != null) {
                     val currentLine = line ?: continue
+                    XLog.d("XLog ChatRepositoryImpl：读取到原始行=$currentLine")
+
                     if (currentLine.startsWith("data: ")) {
                         val data = currentLine.removePrefix("data: ").trim()
-                        if (data == "[DONE]") break
+                        if (data == "[DONE]") {
+                            XLog.d("XLog ChatRepositoryImpl：收到 [DONE] 信号")
+                            break
+                        }
 
                         try {
                             val jsonObject = JsonParser().parse(data).asJsonObject
@@ -52,17 +63,24 @@ class ChatRepositoryImpl(
                             if (choices != null && choices.size() > 0) {
                                 val delta = choices.get(0).asJsonObject.getAsJsonObject("delta")
                                 if (delta != null && delta.has("content") && !delta.get("content").isJsonNull) {
-                                    emit(delta.get("content").asString)
+                                    val content = delta.get("content").asString
+                                    chunkCount++
+                                    val elapsed = System.currentTimeMillis() - startTime
+                                    XLog.d("XLog ChatRepositoryImpl：emit chunk #$chunkCount, 耗时=${elapsed}ms, content=$content")
+                                    emit(content)
                                 }
                             }
                         } catch (e: Exception) {
-                            // 解析失败，跳过
-                            XLog.e("XLog ChatRepositoryImpl:json解析失败，异常：${e.message}")
+                            XLog.e("XLog ChatRepositoryImpl：json解析失败，异常：${e.message}, data=$data")
                         }
                     }
                 }
+
+                val totalTime = System.currentTimeMillis() - startTime
+                XLog.d("XLog ChatRepositoryImpl：流式响应读取完成，共 $chunkCount 个chunk，总耗时=${totalTime}ms")
             }
         } else {
+            XLog.e("XLog ChatRepositoryImpl：API请求失败，code=${response.code()}")
             throw Exception("LLM request failed: ${response.code()}")
         }
     }.flowOn(Dispatchers.IO)

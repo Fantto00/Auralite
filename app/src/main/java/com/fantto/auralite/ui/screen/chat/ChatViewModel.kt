@@ -113,6 +113,7 @@ class ChatViewModel(
                     _chatState.value = state
                     when (state) {
                         is ChatState.Loading -> {
+                            XLog.d("XLog ChatViewModel：收到 Loading 状态")
                             val aiMessage = MessageUiModel(
                                 id = UUID.randomUUID().toString(),
                                 content = "",
@@ -124,6 +125,7 @@ class ChatViewModel(
                             _messages.value = _messages.value + aiMessage
                         }
                         is ChatState.Streaming -> {
+                            XLog.d("XLog ChatViewModel：收到 Streaming 状态，content长度=${state.content.length}")
                             updateStreamingMessage(state.content)
                         }
                         is ChatState.Complete -> {
