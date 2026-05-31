@@ -16,7 +16,7 @@ import com.elvishew.xlog.XLog
 import com.fantto.auralite.App
 import com.fantto.auralite.MainActivity
 import com.fantto.auralite.R
-import com.fantto.auralite.data.engine.stt.VoskEngine
+import com.fantto.auralite.domain.engine.SttEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -57,7 +57,7 @@ class VoiceRecognitionService : Service() {
         }
     }
 
-    private var voskEngine: VoskEngine? = null
+    private var sttEngine: SttEngine? = null
     private var wakeLock: PowerManager.WakeLock? = null  //唤醒锁，防止设备休眠导致识别中断
 
     //自定义协程作用域
@@ -95,23 +95,23 @@ class VoiceRecognitionService : Service() {
             try {
                 XLog.d("VoiceRecognitionService : 进入 startRecognition")
                 val app = application as App
-                voskEngine = VoskEngine(applicationContext)
-                XLog.d("VoiceRecognitionService : 获取到 VoskEngine 实例，准备初始化")
+                sttEngine = app.appModule.sttEngine
+                XLog.d("VoiceRecognitionService : 获取到 SttEngine 实例，准备初始化")
 
-                voskEngine?.initialize()
+                sttEngine?.initialize()
                 XLog.d("VoiceRecognitionService :初始化完成，准备开始监听")
-                voskEngine?.startListening()
+                sttEngine?.startListening()
                 _isRunning.value = true
                 XLog.d("VoiceRecognitionService : isRunning 为 true")
 
                 launch {
-                    voskEngine?.observePartialResult()?.collect { result ->
+                    sttEngine?.observePartialResult()?.collect { result ->
                         _partialResult.value = result
                     }
                 }
 
                 launch {
-                    voskEngine?.observeTranscription()?.collect { result ->
+                    sttEngine?.observeTranscription()?.collect { result ->
                         _transcription.value = result
                     }
                 }
@@ -125,8 +125,8 @@ class VoiceRecognitionService : Service() {
     }
 
     private fun stopRecognition() {
-        voskEngine?.release()
-        voskEngine = null
+        sttEngine?.stopListening()
+        sttEngine = null
         _isRunning.value = false
         XLog.d("XLog VoiceRecognitionService : 停止识别")
     }
