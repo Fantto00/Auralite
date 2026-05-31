@@ -77,9 +77,6 @@ dependencies {
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    // EncryptedSharedPreferences
-    implementation("androidx.security:security-crypto:1.1.0")
-
     // Room
     implementation("androidx.room:room-runtime:2.8.4")
     implementation("androidx.room:room-ktx:2.8.4")
