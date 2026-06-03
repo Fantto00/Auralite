@@ -21,6 +21,8 @@ import com.fantto.auralite.domain.usecase.llm.SendMessageUseCase
 import com.fantto.auralite.domain.usecase.tts.PlayAudioUseCase
 import com.fantto.auralite.domain.usecase.tts.SynthesizeSpeechUseCase
 import com.fantto.auralite.util.AudioPlayer
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -52,7 +54,7 @@ class AppModule(private val context: Context) {
         appDatabase.conversationDao()
     }
 
-    // OkHttp 客户端
+    // OkHttp 客户端（LLM 使用）
     private val okHttpClient: OkHttpClient by lazy {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
@@ -62,6 +64,33 @@ class AppModule(private val context: Context) {
             //添加okhttp拦截器，动态切换baseUrl和添加认证信息
             .addInterceptor(DynamicBaseUrlInterceptor(settingsDataStore, DEFAULT_BASE_URL))
             .addInterceptor(AuthInterceptor(settingsDataStore))
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .build()
+    }
+
+    // OkHttp 客户端（TTS 使用，固定使用 TTS API Key）
+    private val ttsOkHttpClient: OkHttpClient by lazy {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
+        OkHttpClient.Builder()
+            .addInterceptor(DynamicBaseUrlInterceptor(settingsDataStore, DEFAULT_BASE_URL))
+            .addInterceptor { chain ->
+                val original = chain.request()
+                val apiKey = runBlocking { settingsDataStore.ttsApiKey.first() }
+                val request = if (apiKey.isNotEmpty()) {
+                    original.newBuilder()
+                        .header("Authorization", "Bearer $apiKey")
+                        .build()
+                } else {
+                    original
+                }
+                chain.proceed(request)
+            }
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
@@ -82,7 +111,7 @@ class AppModule(private val context: Context) {
     private val ttsRetrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(DEFAULT_BASE_URL)
-            .client(okHttpClient)
+            .client(ttsOkHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
