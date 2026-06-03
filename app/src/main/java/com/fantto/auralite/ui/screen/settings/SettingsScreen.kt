@@ -129,7 +129,7 @@ fun SettingsScreen(
                     title = "Model",
                     value = ttsModel,
                     onValueChange = viewModel::updateTtsModel,
-                    placeholder = "tts-1"
+                    placeholder = "mimo-v2.5-tts"
                 )
                 VoiceSelector(
                     selectedVoice = ttsVoice,

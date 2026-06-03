@@ -45,11 +45,11 @@ class SettingsDataStore(private val context: Context) {
     }
 
     val ttsModel: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[TTS_MODEL] ?: ""
+        preferences[TTS_MODEL] ?: "mimo-v2.5-tts"
     }
 
     val ttsVoice: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[TTS_VOICE] ?: "alloy"
+        preferences[TTS_VOICE] ?: "冰糖"
     }
 
     val ttsSpeed: Flow<Float> = context.dataStore.data.map { preferences ->

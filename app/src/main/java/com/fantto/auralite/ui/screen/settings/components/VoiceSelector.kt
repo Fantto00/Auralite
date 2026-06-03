@@ -12,12 +12,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+private data class MimoVoice(
+    val id: String,
+    val name: String,
+    val language: String,
+    val gender: String
+)
+
+private val mimoVoices = listOf(
+    MimoVoice("冰糖", "冰糖", "中文", "女"),
+    MimoVoice("茉莉", "茉莉", "中文", "女"),
+    MimoVoice("苏打", "苏打", "中文", "男"),
+    MimoVoice("白桦", "白桦", "中文", "男"),
+    MimoVoice("Mia", "Mia", "英文", "女"),
+    MimoVoice("Chloe", "Chloe", "英文", "女"),
+    MimoVoice("Milo", "Milo", "英文", "男"),
+    MimoVoice("Dean", "Dean", "英文", "男")
+)
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun VoiceSelector(
     selectedVoice: String,
     onVoiceSelected: (String) -> Unit,
-    voices: List<String> = listOf("alloy", "echo", "fable", "onyx", "nova", "shimmer"),
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -29,16 +46,26 @@ fun VoiceSelector(
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        FlowRow(
-            modifier = Modifier.padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            voices.forEach { voice ->
-                FilterChip(
-                    selected = voice == selectedVoice,
-                    onClick = { onVoiceSelected(voice) },
-                    label = { Text(voice) }
-                )
+        listOf("中文", "英文").forEach { language ->
+            Text(
+                text = language,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                mimoVoices
+                    .filter { it.language == language }
+                    .forEach { voice ->
+                        FilterChip(
+                            selected = voice.id == selectedVoice,
+                            onClick = { onVoiceSelected(voice.id) },
+                            label = { Text("${voice.name} (${voice.gender})") }
+                        )
+                    }
             }
         }
     }
