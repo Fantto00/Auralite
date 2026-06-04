@@ -10,7 +10,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.elvishew.xlog.XLog
 import com.fantto.auralite.App
@@ -25,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 /** 前台服务，负责持续运行语音识别引擎并提供结果的实时更新 **/
 class VoiceRecognitionService : Service() {
@@ -117,7 +117,7 @@ class VoiceRecognitionService : Service() {
                 }
 
                 XLog.d("XLog VoiceRecognitionService : 开始识别")
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 XLog.e("XLog VoiceRecognitionService ：开启识别失败 ，异常：$e")
                 stopSelf()
             }

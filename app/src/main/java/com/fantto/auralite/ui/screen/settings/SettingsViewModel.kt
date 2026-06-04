@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elvishew.xlog.XLog
 import com.fantto.auralite.domain.repository.SettingsRepository
+import java.io.IOException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -108,7 +109,7 @@ class SettingsViewModel(
                 settingsRepository.saveSttLanguage(_sttLanguage.value)
                 _saveSuccess.value = true
                 XLog.d("XLog SettingsViewModel：配置保存成功")
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 XLog.e("XLog SettingsViewModel：配置保存失败 ${e.message}")
             }
         }

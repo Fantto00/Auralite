@@ -3,6 +3,7 @@ package com.fantto.auralite.ui.screen.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elvishew.xlog.XLog
+import android.database.sqlite.SQLiteException
 import com.fantto.auralite.domain.repository.ChatRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,7 +51,7 @@ class HistoryViewModel(
             try {
                 chatRepository.deleteConversation(id)
                 XLog.d("XLog HistoryViewModel：删除对话 $id")
-            } catch (e: Exception) {
+            } catch (e: SQLiteException) {
                 XLog.e("XLog HistoryViewModel：删除失败 ${e.message}")
             }
         }

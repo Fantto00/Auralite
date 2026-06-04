@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.json.JSONException
 import org.json.JSONObject
 import org.vosk.Model
 import org.vosk.Recognizer
@@ -163,7 +164,7 @@ class VoskEngine(
     private fun parseResultText(json: String): String {
         return try {
             JSONObject(json).optString("text", "")
-        } catch (e: Exception) {
+        } catch (e: JSONException) {
             ""
         }
     }
@@ -171,7 +172,7 @@ class VoskEngine(
     private fun parsePartialText(json: String): String {
         return try {
             JSONObject(json).optString("partial", "")
-        } catch (e: Exception) {
+        } catch (e: JSONException) {
             ""
         }
     }

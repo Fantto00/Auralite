@@ -11,6 +11,7 @@ import com.fantto.auralite.domain.repository.ChatRepository
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.google.gson.JsonElement
+import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -70,7 +71,7 @@ class ChatRepositoryImpl(
                                     emit(content)
                                 }
                             }
-                        } catch (e: Exception) {
+                        } catch (e: JsonSyntaxException) {
                             XLog.e("XLog ChatRepositoryImpl：json解析失败，异常：${e.message}, data=$data")
                         }
                     }

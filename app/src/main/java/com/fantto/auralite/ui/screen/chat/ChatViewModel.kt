@@ -1,5 +1,6 @@
 package com.fantto.auralite.ui.screen.chat
 
+import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elvishew.xlog.XLog
@@ -17,8 +18,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.io.IOException
 import java.util.UUID
 
 class ChatViewModel(
@@ -143,7 +144,7 @@ class ChatViewModel(
                         }
                     }
                 }
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 _errorMessage.value = e.message
                 _isSending.value = false
                 XLog.e("XLog ChatViewModel：异常 ${e.message}")
@@ -213,7 +214,7 @@ class ChatViewModel(
                         else -> {}
                     }
                 }
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 _isPlaying.value = false
                 XLog.e("XLog ChatViewModel：TTS异常 ${e.message}")
             }
@@ -240,7 +241,7 @@ class ChatViewModel(
                     chatRepository.saveConversation(title, history)
                     XLog.d("XLog ChatViewModel：对话已保存，标题=$title")
                 }
-            } catch (e: Exception) {
+            } catch (e: SQLiteException) {
                 XLog.e("XLog ChatViewModel：保存对话失败 ${e.message}")
             }
         }
@@ -274,7 +275,7 @@ class ChatViewModel(
                     _messages.value = uiMessages
                     XLog.d("XLog ChatViewModel：加载了 ${uiMessages.size} 条消息")
                 }
-            } catch (e: Exception) {
+            } catch (e: SQLiteException) {
                 XLog.e("XLog ChatViewModel：加载对话失败 ${e.message}")
             }
         }
