@@ -52,6 +52,7 @@ fun ChatScreen(
     val isPlaying by viewModel.isPlaying.collectAsState()
     val isSending by viewModel.isSending.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val isOnline by viewModel.isOnline.collectAsState()
 
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -72,18 +73,34 @@ fun ChatScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Auralite") },
-                windowInsets = WindowInsets(0),
-                actions = {
-                    IconButton(onClick = { viewModel.clearConversation() }) {
-                        Icon(
-                            imageVector = delete,
-                            contentDescription = "清空对话"
+            Column {
+                CenterAlignedTopAppBar(
+                    title = { Text("Auralite") },
+                    windowInsets = WindowInsets(0),
+                    actions = {
+                        IconButton(onClick = { viewModel.clearConversation() }) {
+                            Icon(
+                                imageVector = delete,
+                                contentDescription = "清空对话"
+                            )
+                        }
+                    }
+                )
+                if (!isOnline) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "网络已断开，语音识别仍可使用",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer
                         )
                     }
                 }
-            )
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
@@ -180,6 +197,23 @@ fun ChatScreen(
                             Button(onClick = { viewModel.retryLastMessage() }) {
                                 Text("重试")
                             }
+                        }
+                    }
+                }
+
+                if (chatState is ChatState.Pending) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "等待网络连接...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
                         }
                     }
                 }

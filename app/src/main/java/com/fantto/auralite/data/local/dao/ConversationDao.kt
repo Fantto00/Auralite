@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.fantto.auralite.data.local.entity.ConversationEntity
 import com.fantto.auralite.data.local.entity.MessageEntity
+import com.fantto.auralite.data.local.entity.OfflineMessageEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -38,4 +39,19 @@ interface ConversationDao {
 
     @Query("DELETE FROM messages WHERE conversationId = :conversationId")
     suspend fun deleteMessagesByConversationId(conversationId: String)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOfflineMessage(message: OfflineMessageEntity)
+
+    @Query("SELECT * FROM offline_messages ORDER BY createdAt ASC")
+    suspend fun getAllOfflineMessages(): List<OfflineMessageEntity>
+
+    @Query("DELETE FROM offline_messages WHERE id = :id")
+    suspend fun deleteOfflineMessageById(id: String)
+
+    @Query("DELETE FROM offline_messages")
+    suspend fun clearOfflineMessages()
+
+    @Query("SELECT COUNT(*) FROM offline_messages")
+    suspend fun getOfflineMessageCount(): Int
 }

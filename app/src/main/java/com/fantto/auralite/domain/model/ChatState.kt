@@ -5,4 +5,5 @@ sealed class ChatState {
     data class Streaming(val content: String) : ChatState()
     data object Complete : ChatState()
     data class Error(val message: String) : ChatState()
+    data object Pending : ChatState()
 }

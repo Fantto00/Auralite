@@ -13,6 +13,7 @@ import com.fantto.auralite.domain.usecase.llm.SendMessageUseCase
 import com.fantto.auralite.domain.usecase.tts.PlayAudioUseCase
 import com.fantto.auralite.domain.usecase.tts.SynthesizeSpeechUseCase
 import com.fantto.auralite.service.VoiceRecognitionService
+import com.fantto.auralite.util.NetworkMonitor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +28,8 @@ class ChatViewModel(
     private val synthesizeSpeechUseCase: SynthesizeSpeechUseCase,
     private val playAudioUseCase: PlayAudioUseCase,
     private val settingsRepository: SettingsRepository,
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
     private val _messages = MutableStateFlow<List<MessageUiModel>>(emptyList())
@@ -51,13 +53,75 @@ class ChatViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    private val _isOnline = MutableStateFlow(true)
+    val isOnline: StateFlow<Boolean> = _isOnline.asStateFlow()
+
     private var currentStreamingMessageId: String? = null
     private var ttsJob: Job? = null
     private var sendJob: Job? = null
-    private var debounceJob: Job? = null // 去抖动定时器
+    private var retryJob: Job? = null
+    private var debounceJob: Job? = null
 
     init {
         observeVoiceRecognition()
+        observeNetwork()
+    }
+
+    private fun observeNetwork() {
+        viewModelScope.launch {
+            networkMonitor.isOnline.collect { online ->
+                _isOnline.value = online
+                XLog.d("XLog ChatViewModel：网络状态=$online")
+                if (online) {
+                    retryJob?.cancel()
+                    retryJob = viewModelScope.launch {
+                        retryPendingMessages()
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun retryPendingMessages() {
+        if (_isSending.value) return
+        if (sendMessageUseCase.hasPendingMessages()) {
+            XLog.d("XLog ChatViewModel：网络恢复，重试待发送消息")
+            _isSending.value = true
+            sendMessageUseCase.flushPendingMessages().collect { state ->
+                _chatState.value = state
+                when (state) {
+                    is ChatState.Loading -> {
+                        XLog.d("XLog ChatViewModel：flush Loading")
+                        finishStreaming()
+                        val aiMessage = MessageUiModel(
+                            id = UUID.randomUUID().toString(),
+                            content = "",
+                            isFromUser = false,
+                            timestamp = System.currentTimeMillis(),
+                            isStreaming = true
+                        )
+                        currentStreamingMessageId = aiMessage.id
+                        _messages.value = _messages.value + aiMessage
+                    }
+                    is ChatState.Streaming -> {
+                        updateStreamingMessage(state.content)
+                    }
+                    is ChatState.Complete -> {
+                        finishStreaming()
+                        _isSending.value = false
+                        XLog.d("XLog ChatViewModel：离线消息发送完成")
+                        saveConversation()
+                    }
+                    is ChatState.Error -> {
+                        finishStreaming()
+                        _isSending.value = false
+                        _errorMessage.value = state.message
+                        XLog.e("XLog ChatViewModel：离线消息发送失败 ${state.message}")
+                    }
+                    else -> {}
+                }
+            }
+        }
     }
 
     private fun observeVoiceRecognition() {
@@ -141,6 +205,14 @@ class ChatViewModel(
                             finishStreaming()
                             _isSending.value = false
                             XLog.e("XLog ChatViewModel：发送失败 ${state.message}")
+                        }
+                        is ChatState.Pending -> {
+                            _isSending.value = false
+                            _messages.value = _messages.value.filterNot {
+                                !it.isFromUser && it.content.isEmpty()
+                            }
+                            _errorMessage.value = "网络已断开，消息将在恢复连接后自动发送"
+                            XLog.d("XLog ChatViewModel：消息已加入离线队列")
                         }
                     }
                 }
@@ -283,6 +355,7 @@ class ChatViewModel(
 
     fun clearConversation() {
         sendJob?.cancel()
+        retryJob?.cancel()
         ttsJob?.cancel()
         _isSending.value = false
         _isPlaying.value = false
@@ -292,6 +365,9 @@ class ChatViewModel(
         _chatState.value = ChatState.Complete
         _errorMessage.value = null
         XLog.d("XLog ChatViewModel：清空对话")
+        viewModelScope.launch {
+            sendMessageUseCase.clearOfflineQueue()
+        }
     }
 
     override fun onCleared() {

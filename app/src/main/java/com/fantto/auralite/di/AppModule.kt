@@ -12,6 +12,7 @@ import com.fantto.auralite.data.remote.interceptor.AuthInterceptor
 import com.fantto.auralite.data.remote.interceptor.DynamicBaseUrlInterceptor
 import com.fantto.auralite.data.repository.AudioRepositoryImpl
 import com.fantto.auralite.data.repository.ChatRepositoryImpl
+import com.fantto.auralite.data.repository.OfflineMessageQueue
 import com.fantto.auralite.data.repository.SettingsRepositoryImpl
 import com.fantto.auralite.domain.engine.SttEngine
 import com.fantto.auralite.domain.repository.AudioRepository
@@ -21,6 +22,7 @@ import com.fantto.auralite.domain.usecase.llm.SendMessageUseCase
 import com.fantto.auralite.domain.usecase.tts.PlayAudioUseCase
 import com.fantto.auralite.domain.usecase.tts.SynthesizeSpeechUseCase
 import com.fantto.auralite.util.AudioPlayer
+import com.fantto.auralite.util.NetworkMonitor
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
@@ -47,7 +49,7 @@ class AppModule(private val context: Context) {
             context,
             AppDatabase::class.java,
             "auralite_database"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     val conversationDao: ConversationDao by lazy {
@@ -148,9 +150,19 @@ class AppModule(private val context: Context) {
         VoskEngine(context)
     }
 
+    // 网络状态监控
+    val networkMonitor: NetworkMonitor by lazy {
+        NetworkMonitor(context)
+    }
+
+    // 离线消息队列
+    val offlineMessageQueue: OfflineMessageQueue by lazy {
+        OfflineMessageQueue(conversationDao)
+    }
+
     // UseCase 实例
     val sendMessageUseCase: SendMessageUseCase by lazy {
-        SendMessageUseCase(chatRepository, settingsRepository)
+        SendMessageUseCase(chatRepository, settingsRepository, networkMonitor, offlineMessageQueue)
     }
 
     val synthesizeSpeechUseCase: SynthesizeSpeechUseCase by lazy {

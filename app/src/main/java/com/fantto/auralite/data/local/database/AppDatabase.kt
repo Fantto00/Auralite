@@ -5,10 +5,11 @@ import androidx.room.RoomDatabase
 import com.fantto.auralite.data.local.dao.ConversationDao
 import com.fantto.auralite.data.local.entity.ConversationEntity
 import com.fantto.auralite.data.local.entity.MessageEntity
+import com.fantto.auralite.data.local.entity.OfflineMessageEntity
 
 @Database(
-    entities = [ConversationEntity::class, MessageEntity::class],
-    version = 1,
+    entities = [ConversationEntity::class, MessageEntity::class, OfflineMessageEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

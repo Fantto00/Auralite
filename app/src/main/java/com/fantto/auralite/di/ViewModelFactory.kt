@@ -19,7 +19,8 @@ class ViewModelFactory(
                     synthesizeSpeechUseCase = appModule.synthesizeSpeechUseCase,
                     playAudioUseCase = appModule.playAudioUseCase,
                     settingsRepository = appModule.settingsRepository,
-                    chatRepository = appModule.chatRepository
+                    chatRepository = appModule.chatRepository,
+                    networkMonitor = appModule.networkMonitor
                 ) as T
             }
             SettingsViewModel::class.java -> {
