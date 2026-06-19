@@ -61,6 +61,7 @@ class ChatViewModel(
     private var sendJob: Job? = null
     private var retryJob: Job? = null
     private var debounceJob: Job? = null
+    private var currentConversationId: String? = null
 
     init {
         observeVoiceRecognition()
@@ -308,10 +309,12 @@ class ChatViewModel(
             try {
                 val history = sendMessageUseCase.getHistory()
                 if (history.isNotEmpty()) {
-                    // 使用用户的第一条消息作为标题
                     val title = history.firstOrNull { it.role == "user" }?.content?.take(50) ?: "新对话"
-                    chatRepository.saveConversation(title, history)
-                    XLog.d("XLog ChatViewModel：对话已保存，标题=$title")
+                    chatRepository.saveConversation(currentConversationId, title, history)
+                    if (currentConversationId == null) {
+                        currentConversationId = chatRepository.getLastConversationId()
+                    }
+                    XLog.d("XLog ChatViewModel：对话已保存，标题=$title, id=$currentConversationId")
                 }
             } catch (e: SQLiteException) {
                 XLog.e("XLog ChatViewModel：保存对话失败 ${e.message}")
@@ -320,6 +323,7 @@ class ChatViewModel(
     }
 
     fun loadConversation(conversationId: String) {
+        currentConversationId = conversationId
         viewModelScope.launch {
             try {
                 // 清空当前对话
@@ -364,6 +368,7 @@ class ChatViewModel(
         _messages.value = emptyList()
         _chatState.value = ChatState.Complete
         _errorMessage.value = null
+        currentConversationId = null
         XLog.d("XLog ChatViewModel：清空对话")
         viewModelScope.launch {
             sendMessageUseCase.clearOfflineQueue()

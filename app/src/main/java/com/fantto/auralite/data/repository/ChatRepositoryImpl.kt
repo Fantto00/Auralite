@@ -86,28 +86,33 @@ class ChatRepositoryImpl(
         }
     }.flowOn(Dispatchers.IO)
 
-    override suspend fun saveConversation(title: String, messages: List<ChatMessage>) {
-        val conversationId = UUID.randomUUID().toString()
+    override suspend fun saveConversation(conversationId: String?, title: String, messages: List<ChatMessage>) {
+        val id = conversationId ?: UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
 
         val conversation = ConversationEntity(
-            id = conversationId,
+            id = id,
             title = title,
             createdAt = now,
             updatedAt = now
         )
         conversationDao.insertConversation(conversation)
 
+        conversationDao.deleteMessagesByConversationId(id)
         messages.forEachIndexed { index, message ->
             val messageEntity = MessageEntity(
                 id = UUID.randomUUID().toString(),
-                conversationId = conversationId,
+                conversationId = id,
                 role = message.role,
                 content = message.content,
                 timestamp = now + index
             )
             conversationDao.insertMessage(messageEntity)
         }
+    }
+
+    override suspend fun getLastConversationId(): String? {
+        return conversationDao.getLastConversationId()
     }
 
     override fun getConversations(): Flow<List<ConversationEntity>> {

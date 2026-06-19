@@ -34,6 +34,9 @@ interface ConversationDao {
     @Query("SELECT content FROM messages WHERE conversationId = :conversationId ORDER BY timestamp DESC LIMIT 1")
     suspend fun getLastMessage(conversationId: String): String?
 
+    @Query("SELECT id FROM conversations ORDER BY updatedAt DESC LIMIT 1")
+    suspend fun getLastConversationId(): String?
+
     @Delete
     suspend fun deleteConversation(conversation: ConversationEntity)
 
