@@ -154,7 +154,9 @@ class ChatViewModel(
     fun sendMessage(text: String) {
         // 去除语音识别产生的空格分词
         val cleanedText = text.replace(" ", "")
-        if (cleanedText.isBlank() || _isSending.value) return
+        if (cleanedText.isBlank() || _isSending.value) {
+            return
+        }
 
         sendJob?.cancel()
         ttsJob?.cancel()
