@@ -1,5 +1,6 @@
 package com.fantto.auralite.ui.screen.chat
 
+import android.content.Context
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -37,6 +38,7 @@ import com.fantto.auralite.ui.icons.delete
 import com.fantto.auralite.ui.screen.chat.components.ChatInputBar
 import com.fantto.auralite.ui.screen.chat.components.MessageBubble
 import com.fantto.auralite.util.PermissionHelper
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,104 +74,19 @@ fun ChatScreen(
     }
 
     Scaffold(
-        topBar = {
-            Column {
-                CenterAlignedTopAppBar(
-                    title = { Text("Auralite") },
-                    windowInsets = WindowInsets(0),
-                    actions = {
-                        IconButton(onClick = { viewModel.clearConversation() }) {
-                            Icon(
-                                imageVector = delete,
-                                contentDescription = "清空对话"
-                            )
-                        }
-                    }
-                )
-                if (!isOnline) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "网络已断开，语音识别仍可使用",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    }
-                }
-            }
-        },
+        topBar =  { ChatTopBar(isOnline,viewModel::clearConversation) } ,
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (isSending) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(4.dp),
-                        strokeWidth = 2.dp
-                    )
+        bottomBar = { ChatBottomBar( inputText,isListening,isSending, onTextChange =  viewModel::updateInputText,
+            onSendClick = {
+                if (isListening) {
+                VoiceRecognitionService.stopService(context)
                 }
-
-                ChatInputBar(
-                    inputText = inputText,
-                    onTextChange = viewModel::updateInputText,
-                    onSendClick = {
-                        if (isListening) {
-                            VoiceRecognitionService.stopService(context)
-                        }
-                        viewModel.sendMessage(inputText)
-                    },
-                    onVoiceClick = {
-                        if (isListening) {
-                            VoiceRecognitionService.stopService(context)
-                        } else {
-                            // 工具类检查权限
-                            PermissionHelper.requestRecordAudioPermission(
-                                context = context,
-                                onGranted = {
-                                    VoiceRecognitionService.startService(context)
-                                },
-                                onDenied = { doNotAskAgain ->
-                                    coroutineScope.launch {
-                                        if (doNotAskAgain) {
-                                            snackbarHostState.showSnackbar(
-                                                "麦克风权限被永久拒绝，请前往设置手动开启"
-                                            )
-                                        } else {
-                                            snackbarHostState.showSnackbar(
-                                                "需要麦克风权限才能使用语音识别"
-                                            )
-                                        }
-                                    }
-                                }
-                            )
-                        }
-                    },
-                    isListening = isListening,
-                    isSending = isSending
-                )
-            }
-        }
+                viewModel.sendMessage(inputText) },
+            onVoiceClick = { handleVoiceClick( context, isListening,snackbarHostState,  coroutineScope) }
+            ) }
     ) { padding ->
         if (messages.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "输入消息开始对话",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
-            }
+            EmptyChatContent(modifier = Modifier.fillMaxSize().padding(padding))
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -219,5 +136,130 @@ fun ChatScreen(
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ChatTopBar(
+    isOnline: Boolean,
+    onClearClick: () -> Unit
+) {
+    Column {
+        CenterAlignedTopAppBar(
+            title = {
+                Text("Auralite")
+            },
+            windowInsets = WindowInsets(0),
+            actions = {
+                IconButton(onClick = onClearClick) {
+                    Icon(
+                        imageVector = delete,
+                        contentDescription = "清空对话"
+                    )
+                }
+            }
+        )
+
+        if (!isOnline) {
+            OfflineBanner()
+        }
+    }
+}
+@Composable
+private fun OfflineBanner() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = 16.dp,
+                vertical = 4.dp
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "网络已断开，语音识别仍可使用",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onErrorContainer
+        )
+    }
+}
+
+@Composable
+private fun ChatBottomBar(
+    inputText: String,
+    isListening: Boolean,
+    isSending: Boolean,
+    onTextChange: (String) -> Unit,
+    onSendClick: () -> Unit,
+    onVoiceClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        if (isSending) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.padding(4.dp),
+                    strokeWidth = 2.dp
+                )
+            }
+        }
+
+        ChatInputBar(
+            inputText = inputText,
+            onTextChange = onTextChange,
+            onSendClick = onSendClick,
+            onVoiceClick = onVoiceClick,
+            isListening = isListening,
+            isSending = isSending
+        )
+    }
+}
+private fun handleVoiceClick(
+    context: Context,
+    isListening: Boolean,
+    snackbarHostState: SnackbarHostState,
+    coroutineScope: CoroutineScope
+) {
+    if (isListening) {
+        VoiceRecognitionService.stopService(context)
+        return
+    }
+
+    PermissionHelper.requestRecordAudioPermission(
+        context = context,
+        onGranted = {
+            VoiceRecognitionService.startService(context)
+        },
+        onDenied = { doNotAskAgain ->
+            coroutineScope.launch {
+                val message = if (doNotAskAgain) {
+                    "麦克风权限被永久拒绝，请前往设置手动开启"
+                } else {
+                    "需要麦克风权限才能使用语音识别"
+                }
+
+                snackbarHostState.showSnackbar(message)
+            }
+        }
+    )
+}
+@Composable
+private fun EmptyChatContent(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "输入消息开始对话",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+        )
     }
 }

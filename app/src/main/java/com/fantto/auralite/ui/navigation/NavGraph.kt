@@ -11,8 +11,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -28,6 +30,7 @@ import com.fantto.auralite.ui.screen.history.HistoryViewModel
 import com.fantto.auralite.ui.screen.settings.SettingsScreen
 import com.fantto.auralite.ui.screen.settings.SettingsViewModel
 // 导航图，定义了应用的导航结构
+
 @Composable
 fun AuraliteNavGraph() {
     val navController = rememberNavController()
@@ -42,27 +45,7 @@ fun AuraliteNavGraph() {
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-
-                screens.forEach { screen ->
-                    NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = screen.title) },
-                        label = { Text(screen.title) },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    )
-                }
-            }
+            AppNavigationBar(navController, screens)
         }
     ) { innerPadding ->
         NavHost(
@@ -104,6 +87,34 @@ fun AuraliteNavGraph() {
                 val settingsViewModel: SettingsViewModel = viewModel(factory = viewModelFactory)
                 SettingsScreen(viewModel = settingsViewModel)
             }
+        }
+    }
+}
+
+@Composable
+fun AppNavigationBar(
+    navController: NavController,
+    screens: List<Screen>
+){
+    NavigationBar {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentDestination = navBackStackEntry?.destination
+
+        screens.forEach { screen ->
+            NavigationBarItem(
+                icon = { Icon(screen.icon, contentDescription = screen.title) },
+                label = { Text(screen.title) },
+                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                onClick = {
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
         }
     }
 }
