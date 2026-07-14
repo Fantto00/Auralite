@@ -86,7 +86,11 @@ class ChatRepositoryImpl(
         }
     }.flowOn(Dispatchers.IO)
 
-    override suspend fun saveConversation(conversationId: String?, title: String, messages: List<ChatMessage>) {
+    override suspend fun saveConversation(
+        conversationId: String?,
+        title: String,
+        messages: List<ChatMessage>
+    ): String {
         val id = conversationId ?: UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
 
@@ -109,6 +113,8 @@ class ChatRepositoryImpl(
             )
             conversationDao.insertMessage(messageEntity)
         }
+
+        return id
     }
 
     override suspend fun getLastConversationId(): String? {

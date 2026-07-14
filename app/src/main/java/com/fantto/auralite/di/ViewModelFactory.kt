@@ -16,11 +16,11 @@ class ViewModelFactory(
             ChatViewModel::class.java -> {
                 ChatViewModel(
                     sendMessageUseCase = appModule.sendMessageUseCase,
-                    synthesizeSpeechUseCase = appModule.synthesizeSpeechUseCase,
-                    playAudioUseCase = appModule.playAudioUseCase,
-                    settingsRepository = appModule.settingsRepository,
-                    chatRepository = appModule.chatRepository,
-                    networkMonitor = appModule.networkMonitor
+                    speakTextUseCase = appModule.speakTextUseCase,
+                    saveConversationUseCase = appModule.saveConversationUseCase,
+                    loadConversationUseCase = appModule.loadConversationUseCase,
+                    voiceRecognitionRepository = appModule.voiceRecognitionRepository,
+                    networkMonitor = appModule.networkMonitor,
                 ) as T
             }
             SettingsViewModel::class.java -> {

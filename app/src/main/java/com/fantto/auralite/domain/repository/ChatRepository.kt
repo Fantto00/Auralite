@@ -13,7 +13,11 @@ interface ChatRepository {
         messages: List<ChatMessage>
     ): Flow<String>
 
-    suspend fun saveConversation(conversationId: String?, title: String, messages: List<ChatMessage>)
+    suspend fun saveConversation(
+        conversationId: String?,
+        title: String,
+        messages: List<ChatMessage>
+    ): String
 
     suspend fun getLastConversationId(): String?
 

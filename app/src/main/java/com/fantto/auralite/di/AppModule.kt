@@ -14,12 +14,17 @@ import com.fantto.auralite.data.repository.AudioRepositoryImpl
 import com.fantto.auralite.data.repository.ChatRepositoryImpl
 import com.fantto.auralite.data.repository.OfflineMessageQueue
 import com.fantto.auralite.data.repository.SettingsRepositoryImpl
+import com.fantto.auralite.data.repository.VoiceRecognitionRepositoryImpl
 import com.fantto.auralite.domain.engine.SttEngine
 import com.fantto.auralite.domain.repository.AudioRepository
 import com.fantto.auralite.domain.repository.ChatRepository
 import com.fantto.auralite.domain.repository.SettingsRepository
+import com.fantto.auralite.domain.repository.VoiceRecognitionRepository
+import com.fantto.auralite.domain.usecase.chat.LoadConversationUseCase
+import com.fantto.auralite.domain.usecase.chat.SaveConversationUseCase
 import com.fantto.auralite.domain.usecase.llm.SendMessageUseCase
 import com.fantto.auralite.domain.usecase.tts.PlayAudioUseCase
+import com.fantto.auralite.domain.usecase.tts.SpeakTextUseCase
 import com.fantto.auralite.domain.usecase.tts.SynthesizeSpeechUseCase
 import com.fantto.auralite.util.AudioPlayer
 import com.fantto.auralite.util.NetworkMonitor
@@ -155,6 +160,10 @@ class AppModule(private val context: Context) {
         NetworkMonitor(context)
     }
 
+    val voiceRecognitionRepository: VoiceRecognitionRepository by lazy {
+        VoiceRecognitionRepositoryImpl()
+    }
+
     // 离线消息队列
     val offlineMessageQueue: OfflineMessageQueue by lazy {
         OfflineMessageQueue(conversationDao)
@@ -171,6 +180,18 @@ class AppModule(private val context: Context) {
 
     val playAudioUseCase: PlayAudioUseCase by lazy {
         PlayAudioUseCase(audioRepository)
+    }
+
+    val speakTextUseCase: SpeakTextUseCase by lazy {
+        SpeakTextUseCase(synthesizeSpeechUseCase, playAudioUseCase)
+    }
+
+    val saveConversationUseCase: SaveConversationUseCase by lazy {
+        SaveConversationUseCase(sendMessageUseCase, chatRepository)
+    }
+
+    val loadConversationUseCase: LoadConversationUseCase by lazy {
+        LoadConversationUseCase(chatRepository, sendMessageUseCase)
     }
 
 }

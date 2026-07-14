@@ -4,31 +4,31 @@ import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elvishew.xlog.XLog
-import com.fantto.auralite.data.remote.dto.ChatMessage
 import com.fantto.auralite.domain.model.ChatState
-import com.fantto.auralite.domain.repository.ChatRepository
 import com.fantto.auralite.domain.repository.PlaybackState
-import com.fantto.auralite.domain.repository.SettingsRepository
+import com.fantto.auralite.domain.repository.VoiceRecognitionRepository
+import com.fantto.auralite.domain.usecase.chat.LoadConversationUseCase
+import com.fantto.auralite.domain.usecase.chat.SaveConversationUseCase
 import com.fantto.auralite.domain.usecase.llm.SendMessageUseCase
-import com.fantto.auralite.domain.usecase.tts.PlayAudioUseCase
-import com.fantto.auralite.domain.usecase.tts.SynthesizeSpeechUseCase
-import com.fantto.auralite.service.VoiceRecognitionService
+import com.fantto.auralite.domain.usecase.tts.SpeakTextUseCase
 import com.fantto.auralite.util.NetworkMonitor
+import java.io.IOException
+import java.util.UUID
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
-import java.io.IOException
-import java.util.UUID
 
 class ChatViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
-    private val synthesizeSpeechUseCase: SynthesizeSpeechUseCase,
-    private val playAudioUseCase: PlayAudioUseCase,
-    private val settingsRepository: SettingsRepository,
-    private val chatRepository: ChatRepository,
+    private val speakTextUseCase: SpeakTextUseCase,
+    private val saveConversationUseCase: SaveConversationUseCase,
+    private val loadConversationUseCase: LoadConversationUseCase,
+    private val voiceRecognitionRepository: VoiceRecognitionRepository,
     private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
@@ -60,7 +60,7 @@ class ChatViewModel(
     private var ttsJob: Job? = null
     private var sendJob: Job? = null
     private var retryJob: Job? = null
-    private var debounceJob: Job? = null
+    private var loadConversationJob: Job? = null
     private var currentConversationId: String? = null
 
     init {
@@ -92,7 +92,6 @@ class ChatViewModel(
                 _chatState.value = state
                 when (state) {
                     is ChatState.Loading -> {
-                        XLog.d("XLog ChatViewModel：flush Loading")
                         finishStreaming()
                         val aiMessage = MessageUiModel(
                             id = UUID.randomUUID().toString(),
@@ -104,44 +103,41 @@ class ChatViewModel(
                         currentStreamingMessageId = aiMessage.id
                         _messages.value = _messages.value + aiMessage
                     }
-                    is ChatState.Streaming -> {
-                        updateStreamingMessage(state.content)
-                    }
+
+                    is ChatState.Streaming -> updateStreamingMessage(state.content)
+
                     is ChatState.Complete -> {
                         finishStreaming()
                         _isSending.value = false
-                        XLog.d("XLog ChatViewModel：离线消息发送完成")
                         saveConversation()
                     }
+
                     is ChatState.Error -> {
                         finishStreaming()
                         _isSending.value = false
                         _errorMessage.value = state.message
                         XLog.e("XLog ChatViewModel：离线消息发送失败 ${state.message}")
                     }
-                    else -> {}
+
+                    else -> Unit
                 }
             }
         }
     }
 
+    @OptIn(FlowPreview::class)
     private fun observeVoiceRecognition() {
         viewModelScope.launch {
-            VoiceRecognitionService.transcription.collect { result ->
-                if (result.isNotEmpty()) {
-                    // 取消之前的去抖动定时器
-                    debounceJob?.cancel()
-                    // 启动新的去抖动定时器，300ms 后更新输入框
-                    debounceJob = viewModelScope.launch {
-                        delay(300)
-                        _inputText.value = result
-                        XLog.d("XLog ChatViewModel：识别结果填入 $result")
-                    }
+            voiceRecognitionRepository.transcription
+                .filter { it.isNotEmpty() }
+                .debounce(300)
+                .collect { result ->
+                    _inputText.value = result
+                    XLog.d("XLog ChatViewModel：识别结果填入 $result")
                 }
-            }
         }
         viewModelScope.launch {
-            VoiceRecognitionService.isRunning.collect { running ->
+            voiceRecognitionRepository.isRunning.collect { running ->
                 _isListening.value = running
             }
         }
@@ -152,16 +148,11 @@ class ChatViewModel(
     }
 
     fun sendMessage(text: String) {
-        // 去除语音识别产生的空格分词
         val cleanedText = text.replace(" ", "")
-        if (cleanedText.isBlank() || _isSending.value) {
-            return
-        }
+        if (cleanedText.isBlank() || _isSending.value) return
 
         sendJob?.cancel()
-        ttsJob?.cancel()
-        _isPlaying.value = false
-        playAudioUseCase.stop()
+        stopSpeaking()
 
         val userMessage = MessageUiModel(
             id = UUID.randomUUID().toString(),
@@ -176,12 +167,10 @@ class ChatViewModel(
         sendJob = viewModelScope.launch {
             _isSending.value = true
             try {
-                XLog.d("XLog ChatViewModel：collect消息流")
                 sendMessageUseCase(cleanedText).collect { state ->
                     _chatState.value = state
                     when (state) {
                         is ChatState.Loading -> {
-                            XLog.d("XLog ChatViewModel：收到 Loading 状态")
                             val aiMessage = MessageUiModel(
                                 id = UUID.randomUUID().toString(),
                                 content = "",
@@ -192,30 +181,28 @@ class ChatViewModel(
                             currentStreamingMessageId = aiMessage.id
                             _messages.value = _messages.value + aiMessage
                         }
-                        is ChatState.Streaming -> {
-                            XLog.d("XLog ChatViewModel：收到 Streaming 状态，content长度=${state.content.length}")
-                            updateStreamingMessage(state.content)
-                        }
+
+                        is ChatState.Streaming -> updateStreamingMessage(state.content)
+
                         is ChatState.Complete -> {
                             finishStreaming()
                             _isSending.value = false
-                            XLog.d("XLog ChatViewModel：消息发送完成")
-                            // 保存对话到数据库
                             saveConversation()
                         }
+
                         is ChatState.Error -> {
                             _errorMessage.value = state.message
                             finishStreaming()
                             _isSending.value = false
                             XLog.e("XLog ChatViewModel：发送失败 ${state.message}")
                         }
+
                         is ChatState.Pending -> {
                             _isSending.value = false
                             _messages.value = _messages.value.filterNot {
                                 !it.isFromUser && it.content.isEmpty()
                             }
                             _errorMessage.value = "网络已断开，消息将在恢复连接后自动发送"
-                            XLog.d("XLog ChatViewModel：消息已加入离线队列")
                         }
                     }
                 }
@@ -266,31 +253,27 @@ class ChatViewModel(
 
         ttsJob?.cancel()
         ttsJob = viewModelScope.launch {
+            _isPlaying.value = true
             try {
-                _isPlaying.value = true
-                val audioFlow = synthesizeSpeechUseCase(lastAiMessage.content)
-                val audioData = mutableListOf<Byte>()
-
-                audioFlow.collect { chunk ->
-                    audioData.addAll(chunk.toList())
-                }
-
-                playAudioUseCase(audioData.toByteArray()).collect { state ->
+                speakTextUseCase(lastAiMessage.content).collect { state ->
                     when (state) {
                         is PlaybackState.Completed -> {
                             _isPlaying.value = false
                             XLog.d("XLog ChatViewModel：播放完成")
                         }
+
                         is PlaybackState.Error -> {
                             _isPlaying.value = false
                             _errorMessage.value = "播放失败: ${state.message}"
                             XLog.e("XLog ChatViewModel：播放失败 ${state.message}")
                         }
-                        else -> {}
+
+                        else -> Unit
                     }
                 }
             } catch (e: IOException) {
                 _isPlaying.value = false
+                _errorMessage.value = "语音播放失败"
                 XLog.e("XLog ChatViewModel：TTS异常 ${e.message}")
             }
         }
@@ -298,7 +281,7 @@ class ChatViewModel(
 
     fun stopSpeaking() {
         ttsJob?.cancel()
-        playAudioUseCase.stop()
+        speakTextUseCase.stop()
         _isPlaying.value = false
     }
 
@@ -306,52 +289,33 @@ class ChatViewModel(
         _errorMessage.value = null
     }
 
-    private fun saveConversation() {
-        viewModelScope.launch {
-            try {
-                val history = sendMessageUseCase.getHistory()
-                if (history.isNotEmpty()) {
-                    val title = history.firstOrNull { it.role == "user" }?.content?.take(50) ?: "新对话"
-                    chatRepository.saveConversation(currentConversationId, title, history)
-                    if (currentConversationId == null) {
-                        currentConversationId = chatRepository.getLastConversationId()
-                    }
-                    XLog.d("XLog ChatViewModel：对话已保存，标题=$title, id=$currentConversationId")
-                }
-            } catch (e: SQLiteException) {
-                XLog.e("XLog ChatViewModel：保存对话失败 ${e.message}")
-            }
+    private suspend fun saveConversation() {
+        try {
+            currentConversationId = saveConversationUseCase(currentConversationId)
+            XLog.d("XLog ChatViewModel：对话已保存，id=$currentConversationId")
+        } catch (e: SQLiteException) {
+            XLog.e("XLog ChatViewModel：保存对话失败 ${e.message}")
         }
     }
 
     fun loadConversation(conversationId: String) {
+        if (currentConversationId == conversationId && loadConversationJob?.isActive == true) return
+
+        loadConversationJob?.cancel()
         currentConversationId = conversationId
-        viewModelScope.launch {
+        loadConversationJob = viewModelScope.launch {
             try {
-                // 清空当前对话
-                sendMessageUseCase.clearHistory()
                 _messages.value = emptyList()
-                
-                // 从数据库加载消息
-                chatRepository.getMessagesByConversationId(conversationId).collect { messageEntities ->
-                    val chatMessages = messageEntities.map { entity ->
-                        ChatMessage(role = entity.role, content = entity.content)
-                    }
-                    
-                    // 设置SendMessageUseCase的历史记录
-                    sendMessageUseCase.setHistory(chatMessages)
-                    
-                    // 转换为UI模型并更新
-                    val uiMessages = messageEntities.map { entity ->
+                loadConversationUseCase(conversationId).collect { messages ->
+                    _messages.value = messages.map { message ->
                         MessageUiModel(
-                            id = entity.id,
-                            content = entity.content,
-                            isFromUser = entity.role == "user",
-                            timestamp = entity.timestamp
+                            id = message.id,
+                            content = message.content,
+                            isFromUser = message.role == "user",
+                            timestamp = message.timestamp
                         )
                     }
-                    _messages.value = uiMessages
-                    XLog.d("XLog ChatViewModel：加载了 ${uiMessages.size} 条消息")
+                    XLog.d("XLog ChatViewModel：加载了 ${messages.size} 条消息")
                 }
             } catch (e: SQLiteException) {
                 XLog.e("XLog ChatViewModel：加载对话失败 ${e.message}")
@@ -362,10 +326,9 @@ class ChatViewModel(
     fun clearConversation() {
         sendJob?.cancel()
         retryJob?.cancel()
-        ttsJob?.cancel()
+        loadConversationJob?.cancel()
+        stopSpeaking()
         _isSending.value = false
-        _isPlaying.value = false
-        playAudioUseCase.stop()
         sendMessageUseCase.clearHistory()
         _messages.value = emptyList()
         _chatState.value = ChatState.Complete
@@ -378,9 +341,10 @@ class ChatViewModel(
     }
 
     override fun onCleared() {
-        super.onCleared()
         sendJob?.cancel()
-        ttsJob?.cancel()
-        playAudioUseCase.stop()
+        retryJob?.cancel()
+        loadConversationJob?.cancel()
+        stopSpeaking()
+        super.onCleared()
     }
 }
